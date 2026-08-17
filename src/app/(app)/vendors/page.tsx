@@ -62,7 +62,7 @@ export default async function VendorsPage() {
         </p>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         {vendors?.length ? (
           <table className="w-full text-sm">
             <thead>
