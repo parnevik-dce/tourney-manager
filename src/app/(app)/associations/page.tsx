@@ -122,6 +122,10 @@ export default async function AssociationsPage() {
                               <StatusSelect
                                 status={team.registration_status}
                                 action={updateTeamStatus.bind(null, team.id)}
+                                options={[
+                                  { value: "pending", label: "Pending" },
+                                  { value: "registered", label: "Registered" },
+                                ]}
                               />
                             ) : (
                               <span className="capitalize">

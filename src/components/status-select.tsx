@@ -3,9 +3,11 @@
 export function StatusSelect({
   status,
   action,
+  options,
 }: {
   status: string;
   action: (formData: FormData) => void;
+  options: { value: string; label: string }[];
 }) {
   return (
     <form action={action}>
@@ -13,10 +15,13 @@ export function StatusSelect({
         name="status"
         defaultValue={status}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="rounded-md border border-slate-300 px-2 py-1 text-sm capitalize"
+        className="rounded-md border border-slate-300 px-2 py-1 text-sm"
       >
-        <option value="pending">Pending</option>
-        <option value="registered">Registered</option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
       </select>
     </form>
   );
