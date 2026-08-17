@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -19,7 +20,13 @@ export default async function Home() {
           Signed in
         </h1>
         <p className="mt-1 text-sm text-slate-500">{user.email}</p>
-        <div className="mt-6">
+        <div className="mt-6 flex items-center gap-4">
+          <Link
+            href="/tournaments"
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Tournaments
+          </Link>
           <SignOutButton />
         </div>
       </div>
