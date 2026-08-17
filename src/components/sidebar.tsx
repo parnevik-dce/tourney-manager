@@ -17,6 +17,7 @@ type Tournament = {
   id: string;
   name: string;
   status: string;
+  public_slug: string;
 } | null;
 
 type Profile = {
@@ -80,6 +81,22 @@ export function Sidebar({
           );
         })}
       </nav>
+
+      {tournament && (
+        <div className="border-t border-slate-200 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Public Views
+          </p>
+          <a
+            href={`/waiver/${tournament.public_slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 block text-sm text-slate-600 hover:text-blue-700 hover:underline"
+          >
+            Waiver Form ↗
+          </a>
+        </div>
+      )}
 
       <div className="border-t border-slate-200 px-5 py-4">
         <div className="flex items-center gap-3">

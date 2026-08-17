@@ -1,4 +1,5 @@
 import Link from "next/link";
+import QRCode from "qrcode";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
 
@@ -16,6 +17,13 @@ export default async function DashboardPage() {
 
   const days = tournament ? daysUntil(tournament.start_date) : null;
   const firstName = (profile?.full_name ?? "").split(" ")[0] || "there";
+
+  const waiverUrl = tournament
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/waiver/${tournament.public_slug}`
+    : null;
+  const qrSvg = waiverUrl
+    ? await QRCode.toString(waiverUrl, { type: "svg", margin: 1, width: 120 })
+    : null;
 
   return (
     <div className="flex-1 px-8 py-8">
@@ -65,6 +73,26 @@ export default async function DashboardPage() {
               /{tournament.public_slug}
             </p>
           </div>
+        </div>
+      )}
+
+      {tournament && qrSvg && (
+        <div className="mt-6 flex items-center justify-between rounded-lg border border-slate-200 bg-white p-6">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">
+              {tournament.year} Waiver Check-In QR Code
+            </p>
+            <p className="mt-1 max-w-md text-sm text-slate-500">
+              Display this at the registration table — scanning it opens the{" "}
+              {tournament.year} waiver form directly so parents can submit on
+              the spot.
+            </p>
+            <p className="mt-2 text-xs text-slate-400">{waiverUrl}</p>
+          </div>
+          <div
+            className="shrink-0"
+            dangerouslySetInnerHTML={{ __html: qrSvg }}
+          />
         </div>
       )}
 
