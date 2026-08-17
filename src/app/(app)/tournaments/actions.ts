@@ -13,17 +13,33 @@ export async function createTournament(formData: FormData) {
   const location = String(formData.get("location") || "") || null;
   const public_slug = String(formData.get("public_slug") || year);
 
-  const { error } = await supabase.from("tournaments").insert({
-    year,
-    name,
-    start_date,
-    end_date,
-    location,
-    public_slug,
-  });
+  const { data: tournament, error } = await supabase
+    .from("tournaments")
+    .insert({
+      year,
+      name,
+      start_date,
+      end_date,
+      location,
+      public_slug,
+    })
+    .select()
+    .single();
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  const { error: divisionsError } = await supabase.from("divisions").insert(
+    ["8U", "10U", "12U", "14U"].map((divisionName, i) => ({
+      tournament_id: tournament.id,
+      name: divisionName,
+      sort_order: i,
+    })),
+  );
+
+  if (divisionsError) {
+    throw new Error(divisionsError.message);
   }
 
   redirect("/tournaments");
