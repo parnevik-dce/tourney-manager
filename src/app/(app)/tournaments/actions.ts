@@ -66,5 +66,13 @@ export async function createTournament(formData: FormData) {
     }
   }
 
+  const { error: siteSettingsError } = await supabase
+    .from("site_settings")
+    .insert({ tournament_id: tournament.id });
+
+  if (siteSettingsError) {
+    throw new Error(siteSettingsError.message);
+  }
+
   redirect("/tournaments");
 }

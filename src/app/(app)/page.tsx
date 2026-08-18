@@ -1,7 +1,13 @@
 import Link from "next/link";
 import QRCode from "qrcode";
+import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
+import {
+  updateSiteSettings,
+  createSiteUpdate,
+  toggleSiteUpdatePublished,
+} from "./actions";
 
 function daysUntil(dateStr: string | null) {
   if (!dateStr) return null;
@@ -10,13 +16,32 @@ function daysUntil(dateStr: string | null) {
 }
 
 export default async function DashboardPage() {
+  const supabase = await createClient();
   const [profile, tournament] = await Promise.all([
     getCurrentProfile(),
     getCurrentTournament(),
   ]);
+  const isDirector = profile?.role === "director";
 
   const days = tournament ? daysUntil(tournament.start_date) : null;
   const firstName = (profile?.full_name ?? "").split(" ")[0] || "there";
+
+  const [{ data: siteSettings }, { data: rawUpdates }] = tournament
+    ? await Promise.all([
+        supabase
+          .from("site_settings")
+          .select("*")
+          .eq("tournament_id", tournament.id)
+          .maybeSingle(),
+        supabase
+          .from("site_updates")
+          .select("*")
+          .eq("tournament_id", tournament.id)
+          .order("created_at", { ascending: false }),
+      ])
+    : [{ data: null }, { data: null }];
+
+  const siteUpdates = rawUpdates ?? [];
 
   const waiverUrl = tournament
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/waiver/${tournament.public_slug}`
@@ -96,10 +121,133 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="mt-6 rounded-lg border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-        Associations, vendors, budget, and task data will show up here as
-        those sections get built out.
-      </div>
+      {tournament && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white">
+          <h2 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">
+            Public Site
+          </h2>
+
+          {isDirector && (
+            <form
+              action={updateSiteSettings}
+              className="grid grid-cols-2 gap-3 border-b border-slate-100 px-5 py-4"
+            >
+              <label className="col-span-2 text-sm text-slate-700">
+                Hero title
+                <input
+                  name="hero_title"
+                  defaultValue={siteSettings?.hero_title ?? ""}
+                  placeholder={tournament.name}
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="col-span-2 text-sm text-slate-700">
+                Hero subtitle
+                <input
+                  name="hero_subtitle"
+                  defaultValue={siteSettings?.hero_subtitle ?? ""}
+                  placeholder="Kootenai County Fairgrounds · Coeur d'Alene, Idaho"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                className="col-span-2 w-fit rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Save
+              </button>
+            </form>
+          )}
+
+          <div className="px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Updates
+            </p>
+            <ul className="mt-2 divide-y divide-slate-100">
+              {siteUpdates.map((u) => (
+                <li
+                  key={u.id}
+                  className="flex items-start justify-between gap-3 py-2"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">
+                      {u.title}
+                    </p>
+                    {u.body && (
+                      <p className="text-sm text-slate-500">{u.body}</p>
+                    )}
+                  </div>
+                  {isDirector ? (
+                    <form
+                      action={toggleSiteUpdatePublished.bind(
+                        null,
+                        u.id,
+                        u.status === "published",
+                      )}
+                    >
+                      <button
+                        type="submit"
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          u.status === "published"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {u.status === "published" ? "Published" : "Draft"}
+                      </button>
+                    </form>
+                  ) : (
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        u.status === "published"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {u.status === "published" ? "Published" : "Draft"}
+                    </span>
+                  )}
+                </li>
+              ))}
+              {!siteUpdates.length && (
+                <li className="py-4 text-center text-sm text-slate-500">
+                  No updates yet.
+                </li>
+              )}
+            </ul>
+
+            {isDirector && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm font-medium text-blue-600">
+                  + Add Update
+                </summary>
+                <form
+                  action={createSiteUpdate}
+                  className="mt-3 space-y-3"
+                >
+                  <input
+                    name="title"
+                    required
+                    placeholder="Title"
+                    className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                  />
+                  <textarea
+                    name="body"
+                    placeholder="Details (optional)"
+                    className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                  >
+                    Add update
+                  </button>
+                </form>
+              </details>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

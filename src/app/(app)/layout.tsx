@@ -23,9 +23,21 @@ export default async function AppLayout({
     getCurrentTournament(),
   ]);
 
+  const { data: siteSettings } = tournament
+    ? await supabase
+        .from("site_settings")
+        .select("published, maintenance_mode")
+        .eq("tournament_id", tournament.id)
+        .maybeSingle()
+    : { data: null };
+
   return (
     <div className="flex min-h-screen w-full flex-1">
-      <Sidebar tournament={tournament} profile={profile} />
+      <Sidebar
+        tournament={tournament}
+        profile={profile}
+        siteSettings={siteSettings}
+      />
       <main className="flex flex-1 flex-col bg-slate-50">{children}</main>
     </div>
   );
