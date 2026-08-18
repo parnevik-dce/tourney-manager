@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
+import { togglePublished, toggleMaintenanceMode } from "@/app/(app)/actions";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard" },
@@ -26,14 +27,22 @@ type Profile = {
   role: string;
 } | null;
 
+type SiteSettings = {
+  published: boolean;
+  maintenance_mode: boolean;
+} | null;
+
 export function Sidebar({
   tournament,
   profile,
+  siteSettings,
 }: {
   tournament: Tournament;
   profile: Profile;
+  siteSettings: SiteSettings;
 }) {
   const pathname = usePathname();
+  const isDirector = profile?.role === "director";
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
@@ -87,6 +96,27 @@ export function Sidebar({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Public Views
           </p>
+          <div className="mt-2 flex items-center justify-between">
+            <a
+              href={`/site/${tournament.public_slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-slate-600 hover:text-blue-700 hover:underline"
+            >
+              Public Site ↗
+            </a>
+            {siteSettings && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
+                  siteSettings.published
+                    ? "bg-green-100 text-green-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {siteSettings.published ? "PUBLISHED" : "DRAFT"}
+              </span>
+            )}
+          </div>
           <a
             href={`/waiver/${tournament.public_slug}`}
             target="_blank"
@@ -95,6 +125,39 @@ export function Sidebar({
           >
             Waiver Form ↗
           </a>
+
+          {isDirector && siteSettings && (
+            <>
+              <form action={togglePublished} className="mt-3">
+                <button
+                  type="submit"
+                  className="text-xs font-medium text-blue-600 hover:underline"
+                >
+                  {siteSettings.published ? "Unpublish site" : "Publish site"}
+                </button>
+              </form>
+              <form action={toggleMaintenanceMode} className="mt-2 flex items-center justify-between">
+                <span className="text-xs text-slate-500">Maintenance Mode</span>
+                <button
+                  type="submit"
+                  className={`h-5 w-9 rounded-full transition-colors ${
+                    siteSettings.maintenance_mode
+                      ? "bg-amber-500"
+                      : "bg-slate-200"
+                  }`}
+                  aria-label="Toggle maintenance mode"
+                >
+                  <span
+                    className={`block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      siteSettings.maintenance_mode
+                        ? "translate-x-4"
+                        : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </form>
+            </>
+          )}
         </div>
       )}
 
