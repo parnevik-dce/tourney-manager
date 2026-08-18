@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentTournament } from "@/lib/tournament";
+import { getCurrentProfile } from "@/lib/profile";
 
 export async function createAssociation(formData: FormData) {
   const supabase = await createClient();
@@ -88,6 +90,47 @@ export async function updateTeamStatus(teamId: string, formData: FormData) {
   const { error } = await supabase
     .from("teams")
     .update({ registration_status: status })
+    .eq("id", teamId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function addPlayer(teamId: string, formData: FormData) {
+  const supabase = await createClient();
+  const full_name = String(formData.get("full_name") ?? "");
+  if (!full_name.trim()) return;
+
+  const { error } = await supabase
+    .from("players")
+    .insert({ team_id: teamId, full_name });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function uploadRoster(teamId: string, formData: FormData) {
+  const profile = await getCurrentProfile();
+  if (profile?.role !== "director") throw new Error("Not authorized");
+
+  const file = formData.get("roster_file");
+  if (!(file instanceof File) || file.size === 0) return;
+
+  const admin = createAdminClient();
+  const path = `${teamId}/${Date.now()}-${file.name}`;
+
+  const { error: uploadError } = await admin.storage
+    .from("rosters")
+    .upload(path, file, { contentType: file.type });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("teams")
+    .update({ roster_file_url: path, roster_uploaded_at: new Date().toISOString() })
     .eq("id", teamId);
 
   if (error) throw new Error(error.message);

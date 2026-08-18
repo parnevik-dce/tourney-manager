@@ -1,8 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
-import { createAssociation, createTeam, updateTeamStatus } from "./actions";
+import {
+  createAssociation,
+  createTeam,
+  updateTeamStatus,
+  addPlayer,
+  uploadRoster,
+} from "./actions";
 import { StatusSelect } from "@/components/status-select";
+
+type Player = {
+  id: string;
+  full_name: string;
+  waivers: { id: string } | null;
+};
 
 export default async function AssociationsPage() {
   const supabase = await createClient();
@@ -19,7 +31,9 @@ export default async function AssociationsPage() {
     ? await Promise.all([
         supabase
           .from("teams")
-          .select("*, team_contacts(*), divisions(name)")
+          .select(
+            "*, team_contacts(*), divisions(name), players(id, full_name, waivers(id))",
+          )
           .eq("tournament_id", tournament.id)
           .order("name"),
         supabase
@@ -96,6 +110,8 @@ export default async function AssociationsPage() {
                       <th className="px-5 py-2 font-medium">Team Contact</th>
                       <th className="px-5 py-2 font-medium">Division</th>
                       <th className="px-5 py-2 font-medium">Status</th>
+                      <th className="px-5 py-2 font-medium">Roster</th>
+                      <th className="px-5 py-2 font-medium">Waivers</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -132,6 +148,93 @@ export default async function AssociationsPage() {
                                 {team.registration_status}
                               </span>
                             )}
+                          </td>
+                          <td className="px-5 py-3">
+                            {team.roster_uploaded_at ? (
+                              <a
+                                href={`/associations/roster/${team.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium text-green-700 hover:underline"
+                              >
+                                Uploaded
+                              </a>
+                            ) : (
+                              <span className="font-medium text-amber-700">
+                                Not Uploaded
+                              </span>
+                            )}
+                            {isDirector && (
+                              <form
+                                action={uploadRoster.bind(null, team.id)}
+                                className="mt-1 flex items-center gap-1"
+                              >
+                                <input
+                                  type="file"
+                                  name="roster_file"
+                                  className="w-28 text-xs"
+                                />
+                                <button
+                                  type="submit"
+                                  className="text-xs text-blue-600 hover:underline"
+                                >
+                                  Upload
+                                </button>
+                              </form>
+                            )}
+                          </td>
+                          <td className="px-5 py-3">
+                            <details>
+                              <summary className="cursor-pointer text-slate-700">
+                                {
+                                  team.players.filter(
+                                    (p: Player) => p.waivers,
+                                  ).length
+                                }
+                                /{team.players.length}
+                              </summary>
+                              <ul className="mt-2 space-y-1 text-xs">
+                                {team.players.map((p: Player) => (
+                                  <li
+                                    key={p.id}
+                                    className="flex items-center justify-between gap-3"
+                                  >
+                                    <span className="text-slate-600">
+                                      {p.full_name}
+                                    </span>
+                                    <span
+                                      className={
+                                        p.waivers
+                                          ? "text-green-600"
+                                          : "text-slate-400"
+                                      }
+                                    >
+                                      {p.waivers
+                                        ? "Submitted"
+                                        : "Not submitted"}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {isDirector && (
+                                <form
+                                  action={addPlayer.bind(null, team.id)}
+                                  className="mt-2 flex items-center gap-1"
+                                >
+                                  <input
+                                    name="full_name"
+                                    placeholder="Player name"
+                                    className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="text-xs text-blue-600 hover:underline"
+                                  >
+                                    Add
+                                  </button>
+                                </form>
+                              )}
+                            </details>
                           </td>
                         </tr>
                       );
