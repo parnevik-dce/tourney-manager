@@ -14,26 +14,40 @@ export default async function FieldsPage() {
   const tournament = await getCurrentTournament();
   const isDirector = profile?.role === "director";
 
-  const [{ data: rawDivisions }, { data: rawFields }] = tournament
-    ? await Promise.all([
-        supabase
-          .from("divisions")
-          .select("*")
-          .eq("tournament_id", tournament.id)
-          .order("sort_order")
-          .order("name"),
-        supabase
-          .from("fields")
-          .select("*, field_divisions(division_id)")
-          .eq("tournament_id", tournament.id)
-          .order("sort_order")
-          .order("name"),
-      ])
-    : [{ data: null }, { data: null }];
+  const [{ data: rawDivisions }, { data: rawFields }, { data: rawTeams }] =
+    tournament
+      ? await Promise.all([
+          supabase
+            .from("divisions")
+            .select("*")
+            .eq("tournament_id", tournament.id)
+            .order("sort_order")
+            .order("name"),
+          supabase
+            .from("fields")
+            .select("*, field_divisions(division_id)")
+            .eq("tournament_id", tournament.id)
+            .order("sort_order")
+            .order("name"),
+          supabase
+            .from("teams")
+            .select("division_id, registration_status")
+            .eq("tournament_id", tournament.id),
+        ])
+      : [{ data: null }, { data: null }, { data: null }];
 
   const divisions = rawDivisions ?? [];
   const fields = rawFields ?? [];
+  const teams = rawTeams ?? [];
   const divisionById = new Map(divisions.map((d) => [d.id, d]));
+
+  function poolGuidance(count: number) {
+    if (count === 0) return "No teams registered yet";
+    if (count === 1) return "Only 1 team registered — not enough for pool play yet";
+    if (count <= 4) return "single round-robin pool";
+    if (count <= 8) return "two pools, playoff bracket to follow";
+    return "multiple pools recommended — consider splitting by seeding";
+  }
 
   return (
     <div className="flex-1 px-8 py-8">
@@ -216,6 +230,40 @@ export default async function FieldsPage() {
               </details>
             )}
           </div>
+        </div>
+      )}
+
+      {tournament && divisions.length > 0 && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white">
+          <h2 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">
+            Pool / Bracket Guidance
+          </h2>
+          <p className="px-5 pt-3 text-xs text-slate-400">
+            Advisory only — build the actual schedule in Tourney Machine.
+          </p>
+          <ul className="divide-y divide-slate-100">
+            {divisions.map((d) => {
+              const count = teams.filter(
+                (t) =>
+                  t.division_id === d.id &&
+                  t.registration_status === "registered",
+              ).length;
+              return (
+                <li
+                  key={d.id}
+                  className="flex items-center justify-between px-5 py-3 text-sm"
+                >
+                  <span className="font-medium text-slate-900">
+                    {d.name}
+                  </span>
+                  <span className="text-slate-500">
+                    {count} {count === 1 ? "team" : "teams"} registered —{" "}
+                    {poolGuidance(count)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
     </div>
