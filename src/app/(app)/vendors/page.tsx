@@ -3,6 +3,7 @@ import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
 import { createVendor, updateVendorStatus } from "./actions";
 import { StatusSelect } from "@/components/status-select";
+import { TextLink } from "@/components/text-link";
 
 const TYPE_LABELS: Record<string, string> = {
   emt: "EMT / Medical",
@@ -94,6 +95,12 @@ export default async function VendorsPage() {
                           {contact.name}
                           {contact.phone && ` · ${contact.phone}`}
                           {contact.email && ` · ${contact.email}`}
+                          {contact.phone && (
+                            <>
+                              {" · "}
+                              <TextLink phone={contact.phone} />
+                            </>
+                          )}
                         </>
                       ) : (
                         "—"

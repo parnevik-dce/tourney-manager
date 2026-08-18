@@ -9,6 +9,7 @@ import {
   uploadRoster,
 } from "./actions";
 import { StatusSelect } from "@/components/status-select";
+import { TextLink } from "@/components/text-link";
 
 type Player = {
   id: string;
@@ -92,6 +93,12 @@ export default async function AssociationsPage() {
                       {primaryContact.name}
                       {primaryContact.phone && ` · ${primaryContact.phone}`}
                       {primaryContact.email && ` · ${primaryContact.email}`}
+                      {primaryContact.phone && (
+                        <>
+                          {" · "}
+                          <TextLink phone={primaryContact.phone} />
+                        </>
+                      )}
                     </p>
                   )}
                 </div>
@@ -126,9 +133,28 @@ export default async function AssociationsPage() {
                             {team.name}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
-                            {contact
-                              ? `${contact.name}${contact.role ? ` (${contact.role})` : ""}`
-                              : "Same as association"}
+                            {contact ? (
+                              <>
+                                {contact.name}
+                                {contact.role && ` (${contact.role})`}
+                                {contact.phone && (
+                                  <>
+                                    {" · "}
+                                    <TextLink phone={contact.phone} />
+                                  </>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                Same as association
+                                {primaryContact?.phone && (
+                                  <>
+                                    {" · "}
+                                    <TextLink phone={primaryContact.phone} />
+                                  </>
+                                )}
+                              </>
+                            )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
                             {team.divisions?.name ?? "—"}
