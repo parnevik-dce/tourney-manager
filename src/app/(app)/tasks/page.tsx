@@ -100,13 +100,13 @@ export default async function TasksPage() {
                             </span>
                           )}
                         </div>
-                        {isDirector && (
+                        {isDirector || task.assignee_id === profile?.id ? (
                           <StatusSelect
                             status={task.status}
                             action={updateTaskStatus.bind(null, task.id)}
                             options={COLUMNS}
                           />
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   ))}
