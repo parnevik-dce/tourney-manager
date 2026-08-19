@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
-import { createTournament } from "./actions";
+import { createTournament, updateTournament } from "./actions";
+
+const STATUS_OPTIONS = ["active", "closed", "archived"];
 
 export default async function TournamentsPage() {
   const supabase = await createClient();
@@ -18,17 +20,106 @@ export default async function TournamentsPage() {
       <ul className="mt-6 divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
         {tournaments?.length ? (
           tournaments.map((t) => (
-            <li
-              key={t.id}
-              className="flex items-center justify-between px-4 py-3"
-            >
-              <div>
-                <p className="font-medium text-slate-900">{t.name}</p>
-                <p className="text-sm text-slate-500">{t.year}</p>
+            <li key={t.id} className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-900">{t.name}</p>
+                  <p className="text-sm text-slate-500">{t.year}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                    {t.status}
+                  </span>
+                  {profile?.role === "director" && (
+                    <details className="relative">
+                      <summary className="cursor-pointer list-none text-sm text-blue-600 hover:underline">
+                        Edit
+                      </summary>
+                      <form
+                        action={updateTournament.bind(null, t.id)}
+                        className="absolute right-0 z-10 mt-2 w-72 space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-lg"
+                      >
+                        <label className="block text-sm text-slate-700">
+                          Year
+                          <input
+                            name="year"
+                            type="number"
+                            required
+                            defaultValue={t.year}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Name
+                          <input
+                            name="name"
+                            type="text"
+                            required
+                            defaultValue={t.name}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Start date
+                          <input
+                            name="start_date"
+                            type="date"
+                            defaultValue={t.start_date ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          End date
+                          <input
+                            name="end_date"
+                            type="date"
+                            defaultValue={t.end_date ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Location
+                          <input
+                            name="location"
+                            type="text"
+                            defaultValue={t.location ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Public URL slug
+                          <input
+                            name="public_slug"
+                            type="text"
+                            defaultValue={t.public_slug}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Status
+                          <select
+                            name="status"
+                            defaultValue={t.status}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          >
+                            {STATUS_OPTIONS.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          type="submit"
+                          className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                        >
+                          Save
+                        </button>
+                      </form>
+                    </details>
+                  )}
+                </div>
               </div>
-              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                {t.status}
-              </span>
             </li>
           ))
         ) : (
