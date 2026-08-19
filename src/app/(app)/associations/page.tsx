@@ -6,14 +6,19 @@ import {
   updateAssociation,
   updateAssociationContact,
   addAssociationContact,
+  deleteAssociationContact,
+  deleteAssociation,
   createTeam,
   updateTeamStatus,
   addPlayer,
   addTeamContact,
+  deleteTeamContact,
+  deleteTeam,
   uploadRoster,
 } from "./actions";
 import { StatusSelect } from "@/components/status-select";
 import { TextLink } from "@/components/text-link";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
 type Player = {
   id: string;
@@ -29,7 +34,12 @@ type Contact = {
   role?: string | null;
 };
 
-export default async function AssociationsPage() {
+export default async function AssociationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: errorMessage } = await searchParams;
   const supabase = await createClient();
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
@@ -76,6 +86,12 @@ export default async function AssociationsPage() {
         Registration status tracked here; official registration lives in
         SportsEngine.
       </p>
+
+      {errorMessage && (
+        <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {errorMessage}
+        </p>
+      )}
 
       {!tournament && (
         <p className="mt-6 text-sm text-amber-700">
@@ -140,52 +156,79 @@ export default async function AssociationsPage() {
                           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                         />
                       </label>
-                      <button
-                        type="submit"
-                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                      >
-                        Save name
-                      </button>
-                    </form>
-                    <div className="space-y-4">
-                      {assoc.association_contacts?.map((c: Contact) => (
-                        <form
-                          key={c.id}
-                          action={updateAssociationContact.bind(null, c.id)}
-                          className="space-y-2 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="submit"
+                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
                         >
-                          <label className="block text-sm text-slate-700">
-                            Contact name
-                            <input
-                              name="name"
-                              defaultValue={c.name}
-                              required
-                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                            />
-                          </label>
-                          <label className="block text-sm text-slate-700">
-                            Contact phone
-                            <input
-                              name="phone"
-                              defaultValue={c.phone ?? ""}
-                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                            />
-                          </label>
-                          <label className="block text-sm text-slate-700">
-                            Contact email
-                            <input
-                              name="email"
-                              defaultValue={c.email ?? ""}
-                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                            />
-                          </label>
-                          <button
-                            type="submit"
-                            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                          Save name
+                        </button>
+                      </div>
+                    </form>
+                    <form action={deleteAssociation.bind(null, assoc.id)}>
+                      <ConfirmSubmitButton
+                        confirmText={`Delete ${assoc.name}? This can't be undone.`}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        Delete Association
+                      </ConfirmSubmitButton>
+                    </form>
+                    <div className="col-span-2 space-y-4">
+                      {assoc.association_contacts?.map((c: Contact) => (
+                        <div
+                          key={c.id}
+                          className="border-b border-slate-100 pb-4 last:border-0 last:pb-0"
+                        >
+                          <form
+                            action={updateAssociationContact.bind(null, c.id)}
+                            className="space-y-2"
                           >
-                            Save contact
-                          </button>
-                        </form>
+                            <label className="block text-sm text-slate-700">
+                              Contact name
+                              <input
+                                name="name"
+                                defaultValue={c.name}
+                                required
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="block text-sm text-slate-700">
+                              Contact phone
+                              <input
+                                name="phone"
+                                defaultValue={c.phone ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="block text-sm text-slate-700">
+                              Contact email
+                              <input
+                                name="email"
+                                defaultValue={c.email ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="submit"
+                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                              >
+                                Save contact
+                              </button>
+                            </div>
+                          </form>
+                          <form
+                            action={deleteAssociationContact.bind(null, c.id)}
+                            className="mt-2"
+                          >
+                            <ConfirmSubmitButton
+                              confirmText={`Delete contact ${c.name}?`}
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              Delete contact
+                            </ConfirmSubmitButton>
+                          </form>
+                        </div>
                       ))}
                       {!assoc.association_contacts?.length && (
                         <p className="text-sm text-slate-500">
@@ -257,11 +300,21 @@ export default async function AssociationsPage() {
                         >
                           <td className="px-5 py-3 font-medium text-slate-900">
                             {team.name}
+                            {isDirector && (
+                              <form action={deleteTeam.bind(null, team.id)}>
+                                <ConfirmSubmitButton
+                                  confirmText={`Delete ${team.name}? This can't be undone.`}
+                                  className="mt-0.5 block text-xs font-normal text-red-600 hover:underline"
+                                >
+                                  Delete
+                                </ConfirmSubmitButton>
+                              </form>
+                            )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
                             {contacts.length ? (
                               contacts.map((contact) => (
-                                <p key={contact.id}>
+                                <div key={contact.id}>
                                   {contact.name}
                                   {contact.role && ` (${contact.role})`}
                                   {contact.phone && (
@@ -270,7 +323,26 @@ export default async function AssociationsPage() {
                                       <TextLink phone={contact.phone} />
                                     </>
                                   )}
-                                </p>
+                                  {isDirector && (
+                                    <>
+                                      {" · "}
+                                      <form
+                                        action={deleteTeamContact.bind(
+                                          null,
+                                          contact.id,
+                                        )}
+                                        className="inline"
+                                      >
+                                        <ConfirmSubmitButton
+                                          confirmText={`Delete contact ${contact.name}?`}
+                                          className="text-xs text-red-600 hover:underline"
+                                        >
+                                          Delete
+                                        </ConfirmSubmitButton>
+                                      </form>
+                                    </>
+                                  )}
+                                </div>
                               ))
                             ) : (
                               <p>
