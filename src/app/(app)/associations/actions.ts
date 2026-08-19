@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentTournament } from "@/lib/tournament";
@@ -211,6 +212,79 @@ export async function uploadRoster(teamId: string, formData: FormData) {
     .from("teams")
     .update({ roster_file_url: path, roster_uploaded_at: new Date().toISOString() })
     .eq("id", teamId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function deleteAssociationContact(contactId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("association_contacts")
+    .delete()
+    .eq("id", contactId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function deleteTeamContact(contactId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("team_contacts")
+    .delete()
+    .eq("id", contactId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function deleteAssociation(associationId: string) {
+  const supabase = await createClient();
+
+  const { count: teamCount } = await supabase
+    .from("teams")
+    .select("id", { count: "exact", head: true })
+    .eq("association_id", associationId);
+
+  if (teamCount && teamCount > 0) {
+    redirect(
+      `/associations?error=${encodeURIComponent(
+        `Can't delete this association — it has ${teamCount} team${teamCount === 1 ? "" : "s"} on record (across all tournament years). Delete those teams first.`,
+      )}`,
+    );
+  }
+
+  const { error } = await supabase
+    .from("associations")
+    .delete()
+    .eq("id", associationId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function deleteTeam(teamId: string) {
+  const supabase = await createClient();
+
+  const { count: playerCount } = await supabase
+    .from("players")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", teamId);
+
+  if (playerCount && playerCount > 0) {
+    redirect(
+      `/associations?error=${encodeURIComponent(
+        `Can't delete this team — it has ${playerCount} player${playerCount === 1 ? "" : "s"} on its roster (including any submitted waivers). Remove the roster first.`,
+      )}`,
+    );
+  }
+
+  const { error } = await supabase.from("teams").delete().eq("id", teamId);
 
   if (error) throw new Error(error.message);
 
