@@ -3,6 +3,8 @@ import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
 import {
   createAssociation,
+  updateAssociation,
+  updateAssociationContact,
   createTeam,
   updateTeamStatus,
   addPlayer,
@@ -108,6 +110,81 @@ export default async function AssociationsPage() {
                   </span>
                 )}
               </div>
+
+              {isDirector && (
+                <details className="border-b border-slate-100 px-5 py-3">
+                  <summary className="cursor-pointer text-sm font-medium text-blue-600">
+                    Edit Association
+                  </summary>
+                  <div className="mt-3 grid grid-cols-2 gap-4">
+                    <form
+                      action={updateAssociation.bind(null, assoc.id)}
+                      className="space-y-2"
+                    >
+                      <label className="block text-sm text-slate-700">
+                        Association name
+                        <input
+                          name="name"
+                          defaultValue={assoc.name}
+                          required
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                        />
+                      </label>
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                      >
+                        Save name
+                      </button>
+                    </form>
+                    {primaryContact ? (
+                      <form
+                        action={updateAssociationContact.bind(
+                          null,
+                          primaryContact.id,
+                        )}
+                        className="space-y-2"
+                      >
+                        <label className="block text-sm text-slate-700">
+                          Contact name
+                          <input
+                            name="name"
+                            defaultValue={primaryContact.name}
+                            required
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Contact phone
+                          <input
+                            name="phone"
+                            defaultValue={primaryContact.phone ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Contact email
+                          <input
+                            name="email"
+                            defaultValue={primaryContact.email ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <button
+                          type="submit"
+                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                        >
+                          Save contact
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="text-sm text-slate-500">
+                        No contact yet.
+                      </p>
+                    )}
+                  </div>
+                </details>
+              )}
 
               {assocTeams.length > 0 && (
                 <table className="w-full text-sm">

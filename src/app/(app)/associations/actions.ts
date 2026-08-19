@@ -38,6 +38,42 @@ export async function createAssociation(formData: FormData) {
   revalidatePath("/associations");
 }
 
+export async function updateAssociation(
+  associationId: string,
+  formData: FormData,
+) {
+  const supabase = await createClient();
+  const name = String(formData.get("name") ?? "");
+
+  const { error } = await supabase
+    .from("associations")
+    .update({ name })
+    .eq("id", associationId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function updateAssociationContact(
+  contactId: string,
+  formData: FormData,
+) {
+  const supabase = await createClient();
+  const name = String(formData.get("name") ?? "");
+  const phone = String(formData.get("phone") || "") || null;
+  const email = String(formData.get("email") || "") || null;
+
+  const { error } = await supabase
+    .from("association_contacts")
+    .update({ name, phone, email })
+    .eq("id", contactId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
 export async function createTeam(formData: FormData) {
   const supabase = await createClient();
   const tournament = await getCurrentTournament();
