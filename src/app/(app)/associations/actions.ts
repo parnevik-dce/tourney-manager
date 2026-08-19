@@ -74,6 +74,28 @@ export async function updateAssociationContact(
   revalidatePath("/associations");
 }
 
+export async function addAssociationContact(
+  associationId: string,
+  formData: FormData,
+) {
+  const supabase = await createClient();
+  const name = String(formData.get("name") ?? "");
+  const phone = String(formData.get("phone") || "") || null;
+  const email = String(formData.get("email") || "") || null;
+  if (!name.trim()) return;
+
+  const { error } = await supabase.from("association_contacts").insert({
+    association_id: associationId,
+    name,
+    phone,
+    email,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
 export async function createTeam(formData: FormData) {
   const supabase = await createClient();
   const tournament = await getCurrentTournament();
@@ -127,6 +149,27 @@ export async function updateTeamStatus(teamId: string, formData: FormData) {
     .from("teams")
     .update({ registration_status: status })
     .eq("id", teamId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
+export async function addTeamContact(teamId: string, formData: FormData) {
+  const supabase = await createClient();
+  const name = String(formData.get("name") ?? "");
+  const role = String(formData.get("role") || "") || null;
+  const phone = String(formData.get("phone") || "") || null;
+  const email = String(formData.get("email") || "") || null;
+  if (!name.trim()) return;
+
+  const { error } = await supabase.from("team_contacts").insert({
+    team_id: teamId,
+    name,
+    role,
+    phone,
+    email,
+  });
 
   if (error) throw new Error(error.message);
 

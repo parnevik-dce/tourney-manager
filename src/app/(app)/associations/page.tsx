@@ -5,9 +5,11 @@ import {
   createAssociation,
   updateAssociation,
   updateAssociationContact,
+  addAssociationContact,
   createTeam,
   updateTeamStatus,
   addPlayer,
+  addTeamContact,
   uploadRoster,
 } from "./actions";
 import { StatusSelect } from "@/components/status-select";
@@ -17,6 +19,14 @@ type Player = {
   id: string;
   full_name: string;
   waivers: { id: string } | null;
+};
+
+type Contact = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  role?: string | null;
 };
 
 export default async function AssociationsPage() {
@@ -90,19 +100,19 @@ export default async function AssociationsPage() {
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <div>
                   <p className="font-semibold text-slate-900">{assoc.name}</p>
-                  {primaryContact && (
-                    <p className="text-sm text-slate-500">
-                      {primaryContact.name}
-                      {primaryContact.phone && ` · ${primaryContact.phone}`}
-                      {primaryContact.email && ` · ${primaryContact.email}`}
-                      {primaryContact.phone && (
+                  {assoc.association_contacts?.map((c: Contact) => (
+                    <p key={c.id} className="text-sm text-slate-500">
+                      {c.name}
+                      {c.phone && ` · ${c.phone}`}
+                      {c.email && ` · ${c.email}`}
+                      {c.phone && (
                         <>
                           {" · "}
-                          <TextLink phone={primaryContact.phone} />
+                          <TextLink phone={c.phone} />
                         </>
                       )}
                     </p>
-                  )}
+                  ))}
                 </div>
                 {tournament && (
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -137,51 +147,90 @@ export default async function AssociationsPage() {
                         Save name
                       </button>
                     </form>
-                    {primaryContact ? (
-                      <form
-                        action={updateAssociationContact.bind(
-                          null,
-                          primaryContact.id,
-                        )}
-                        className="space-y-2"
-                      >
-                        <label className="block text-sm text-slate-700">
-                          Contact name
-                          <input
-                            name="name"
-                            defaultValue={primaryContact.name}
-                            required
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          Contact phone
-                          <input
-                            name="phone"
-                            defaultValue={primaryContact.phone ?? ""}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          Contact email
-                          <input
-                            name="email"
-                            defaultValue={primaryContact.email ?? ""}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <button
-                          type="submit"
-                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                    <div className="space-y-4">
+                      {assoc.association_contacts?.map((c: Contact) => (
+                        <form
+                          key={c.id}
+                          action={updateAssociationContact.bind(null, c.id)}
+                          className="space-y-2 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
                         >
-                          Save contact
-                        </button>
-                      </form>
-                    ) : (
-                      <p className="text-sm text-slate-500">
-                        No contact yet.
-                      </p>
-                    )}
+                          <label className="block text-sm text-slate-700">
+                            Contact name
+                            <input
+                              name="name"
+                              defaultValue={c.name}
+                              required
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Contact phone
+                            <input
+                              name="phone"
+                              defaultValue={c.phone ?? ""}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Contact email
+                            <input
+                              name="email"
+                              defaultValue={c.email ?? ""}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                          >
+                            Save contact
+                          </button>
+                        </form>
+                      ))}
+                      {!assoc.association_contacts?.length && (
+                        <p className="text-sm text-slate-500">
+                          No contacts yet.
+                        </p>
+                      )}
+                      <details>
+                        <summary className="cursor-pointer text-sm font-medium text-blue-600">
+                          + Add Contact
+                        </summary>
+                        <form
+                          action={addAssociationContact.bind(null, assoc.id)}
+                          className="mt-2 space-y-2"
+                        >
+                          <label className="block text-sm text-slate-700">
+                            Name
+                            <input
+                              name="name"
+                              required
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Phone
+                            <input
+                              name="phone"
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Email
+                            <input
+                              name="email"
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                          >
+                            Add contact
+                          </button>
+                        </form>
+                      </details>
+                    </div>
                   </div>
                 </details>
               )}
@@ -200,7 +249,7 @@ export default async function AssociationsPage() {
                   </thead>
                   <tbody>
                     {assocTeams.map((team) => {
-                      const contact = team.team_contacts?.[0];
+                      const contacts: Contact[] = team.team_contacts ?? [];
                       return (
                         <tr
                           key={team.id}
@@ -210,19 +259,21 @@ export default async function AssociationsPage() {
                             {team.name}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
-                            {contact ? (
-                              <>
-                                {contact.name}
-                                {contact.role && ` (${contact.role})`}
-                                {contact.phone && (
-                                  <>
-                                    {" · "}
-                                    <TextLink phone={contact.phone} />
-                                  </>
-                                )}
-                              </>
+                            {contacts.length ? (
+                              contacts.map((contact) => (
+                                <p key={contact.id}>
+                                  {contact.name}
+                                  {contact.role && ` (${contact.role})`}
+                                  {contact.phone && (
+                                    <>
+                                      {" · "}
+                                      <TextLink phone={contact.phone} />
+                                    </>
+                                  )}
+                                </p>
+                              ))
                             ) : (
-                              <>
+                              <p>
                                 Same as association
                                 {primaryContact?.phone && (
                                   <>
@@ -230,7 +281,49 @@ export default async function AssociationsPage() {
                                     <TextLink phone={primaryContact.phone} />
                                   </>
                                 )}
-                              </>
+                              </p>
+                            )}
+                            {isDirector && (
+                              <details className="mt-1">
+                                <summary className="cursor-pointer text-xs text-blue-600">
+                                  + Add contact
+                                </summary>
+                                <form
+                                  action={addTeamContact.bind(null, team.id)}
+                                  className="mt-1 space-y-1"
+                                >
+                                  <input
+                                    name="name"
+                                    aria-label="Contact name"
+                                    placeholder="Name"
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <input
+                                    name="role"
+                                    aria-label="Contact role"
+                                    placeholder="Role"
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <input
+                                    name="phone"
+                                    aria-label="Contact phone"
+                                    placeholder="Phone"
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <input
+                                    name="email"
+                                    aria-label="Contact email"
+                                    placeholder="Email"
+                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="text-xs text-blue-600 hover:underline"
+                                  >
+                                    Add
+                                  </button>
+                                </form>
+                              </details>
                             )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
