@@ -12,6 +12,7 @@ export function StatusSelect({
   return (
     <form action={action}>
       <select
+        key={status}
         name="status"
         defaultValue={status}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
