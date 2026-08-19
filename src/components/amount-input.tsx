@@ -10,6 +10,7 @@ export function AmountInput({
   return (
     <form action={action}>
       <input
+        key={String(defaultValue)}
         type="number"
         step="0.01"
         name="actual_amount"
