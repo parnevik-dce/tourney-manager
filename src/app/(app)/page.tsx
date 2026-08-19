@@ -225,17 +225,21 @@ export default async function DashboardPage() {
                   action={createSiteUpdate}
                   className="mt-3 space-y-3"
                 >
-                  <input
-                    name="title"
-                    required
-                    placeholder="Title"
-                    className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                  />
-                  <textarea
-                    name="body"
-                    placeholder="Details (optional)"
-                    className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                  />
+                  <label className="block text-sm text-slate-700">
+                    Title
+                    <input
+                      name="title"
+                      required
+                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                    />
+                  </label>
+                  <label className="block text-sm text-slate-700">
+                    Details (optional)
+                    <textarea
+                      name="body"
+                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                    />
+                  </label>
                   <button
                     type="submit"
                     className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
