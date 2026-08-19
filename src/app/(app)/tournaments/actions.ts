@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function createTournament(formData: FormData) {
@@ -75,4 +76,35 @@ export async function createTournament(formData: FormData) {
   }
 
   redirect("/tournaments");
+}
+
+export async function updateTournament(tournamentId: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const year = Number(formData.get("year"));
+  const name = String(formData.get("name") ?? "");
+  const start_date = String(formData.get("start_date") || "") || null;
+  const end_date = String(formData.get("end_date") || "") || null;
+  const location = String(formData.get("location") || "") || null;
+  const public_slug = String(formData.get("public_slug") || year);
+  const status = String(formData.get("status") || "active");
+
+  const { error } = await supabase
+    .from("tournaments")
+    .update({
+      year,
+      name,
+      start_date,
+      end_date,
+      location,
+      public_slug,
+      status,
+    })
+    .eq("id", tournamentId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/tournaments");
 }
