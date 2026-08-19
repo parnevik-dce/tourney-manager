@@ -249,6 +249,7 @@ export default async function AssociationsPage() {
                                 >
                                   <input
                                     name="full_name"
+                                    aria-label="Player name"
                                     placeholder="Player name"
                                     className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs"
                                   />
@@ -315,26 +316,35 @@ export default async function AssociationsPage() {
                       Team contact — leave blank to use the association&apos;s
                       contact
                     </p>
-                    <input
-                      name="contact_name"
-                      placeholder="Name"
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                    />
-                    <input
-                      name="contact_role"
-                      placeholder="Role (Manager, Coach)"
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                    />
-                    <input
-                      name="contact_phone"
-                      placeholder="Phone"
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                    />
-                    <input
-                      name="contact_email"
-                      placeholder="Email"
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                    />
+                    <label className="text-sm text-slate-700">
+                      Name
+                      <input
+                        name="contact_name"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-700">
+                      Role
+                      <input
+                        name="contact_role"
+                        placeholder="Manager, Coach"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-700">
+                      Phone
+                      <input
+                        name="contact_phone"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                      />
+                    </label>
+                    <label className="text-sm text-slate-700">
+                      Email
+                      <input
+                        name="contact_email"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                      />
+                    </label>
                     <button
                       type="submit"
                       className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
@@ -367,21 +377,27 @@ export default async function AssociationsPage() {
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
               />
             </label>
-            <input
-              name="contact_name"
-              placeholder="Contact name"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-            />
-            <input
-              name="contact_phone"
-              placeholder="Contact phone"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-            />
-            <input
-              name="contact_email"
-              placeholder="Contact email"
-              className="col-span-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-            />
+            <label className="text-sm text-slate-700">
+              Contact name
+              <input
+                name="contact_name"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              />
+            </label>
+            <label className="text-sm text-slate-700">
+              Contact phone
+              <input
+                name="contact_phone"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              />
+            </label>
+            <label className="col-span-2 text-sm text-slate-700">
+              Contact email
+              <input
+                name="contact_email"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              />
+            </label>
             <button
               type="submit"
               className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
