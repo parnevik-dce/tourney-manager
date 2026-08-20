@@ -11,13 +11,14 @@ export async function createAssociation(formData: FormData) {
   const supabase = await createClient();
 
   const name = String(formData.get("name") ?? "");
+  const mascot = String(formData.get("mascot") || "") || null;
   const contactName = String(formData.get("contact_name") || "");
   const contactEmail = String(formData.get("contact_email") || "") || null;
   const contactPhone = String(formData.get("contact_phone") || "") || null;
 
   const { data: association, error } = await supabase
     .from("associations")
-    .insert({ name })
+    .insert({ name, mascot })
     .select()
     .single();
 
@@ -45,10 +46,11 @@ export async function updateAssociation(
 ) {
   const supabase = await createClient();
   const name = String(formData.get("name") ?? "");
+  const mascot = String(formData.get("mascot") || "") || null;
 
   const { error } = await supabase
     .from("associations")
-    .update({ name })
+    .update({ name, mascot })
     .eq("id", associationId);
 
   if (error) throw new Error(error.message);
