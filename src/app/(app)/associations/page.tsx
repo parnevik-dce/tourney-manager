@@ -116,7 +116,12 @@ export default async function AssociationsPage({
             >
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <div>
-                  <p className="font-semibold text-slate-900">{assoc.name}</p>
+                  <p className="font-semibold text-slate-900">
+                    {assoc.name}
+                    {assoc.mascot && (
+                      <span className="font-normal text-slate-500"> — {assoc.mascot}</span>
+                    )}
+                  </p>
                   {assoc.association_contacts?.map((c: Contact) => (
                     <p key={c.id} className="text-sm text-slate-500">
                       {c.name}
@@ -154,6 +159,15 @@ export default async function AssociationsPage({
                           name="name"
                           defaultValue={assoc.name}
                           required
+                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                        />
+                      </label>
+                      <label className="block text-sm text-slate-700">
+                        Mascot
+                        <input
+                          name="mascot"
+                          defaultValue={assoc.mascot ?? ""}
+                          placeholder="Rebels"
                           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                         />
                       </label>
@@ -621,6 +635,14 @@ export default async function AssociationsPage({
               <input
                 name="name"
                 required
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              />
+            </label>
+            <label className="col-span-2 text-sm text-slate-700">
+              Mascot
+              <input
+                name="mascot"
+                placeholder="Rebels"
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
               />
             </label>
