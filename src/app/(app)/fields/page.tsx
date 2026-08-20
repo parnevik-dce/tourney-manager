@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
+import { CollapsibleDetails } from "@/components/collapsible-details";
 import {
   createDivision,
   deleteDivision,
@@ -114,10 +115,10 @@ export default async function FieldsPage() {
             </ul>
 
             {isDirector && (
-              <details className="border-t border-slate-100 px-5 py-3">
-                <summary className="cursor-pointer text-sm font-medium text-blue-600">
-                  + Add Field
-                </summary>
+              <CollapsibleDetails
+                className="border-t border-slate-100 px-5 py-3"
+                summary="+ Add Field"
+              >
                 <form action={createField} className="mt-3 space-y-3">
                   <label className="block text-sm text-slate-700">
                     Field name
@@ -157,7 +158,7 @@ export default async function FieldsPage() {
                     Add field
                   </button>
                 </form>
-              </details>
+              </CollapsibleDetails>
             )}
           </div>
 
@@ -202,10 +203,10 @@ export default async function FieldsPage() {
             </ul>
 
             {isDirector && (
-              <details className="border-t border-slate-100 px-5 py-3">
-                <summary className="cursor-pointer text-sm font-medium text-blue-600">
-                  + Add Division
-                </summary>
+              <CollapsibleDetails
+                className="border-t border-slate-100 px-5 py-3"
+                summary="+ Add Division"
+              >
                 <form action={createDivision} className="mt-3 space-y-3">
                   <label className="block text-sm text-slate-700">
                     Division name
@@ -227,7 +228,7 @@ export default async function FieldsPage() {
                     Add division
                   </button>
                 </form>
-              </details>
+              </CollapsibleDetails>
             )}
           </div>
         </div>

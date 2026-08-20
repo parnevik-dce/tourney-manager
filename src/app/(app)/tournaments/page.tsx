@@ -1,8 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { createTournament, updateTournament } from "./actions";
+import { CollapsibleDetails } from "@/components/collapsible-details";
 
 const STATUS_OPTIONS = ["active", "closed", "archived"];
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 export default async function TournamentsPage() {
   const supabase = await createClient();
@@ -28,13 +33,14 @@ export default async function TournamentsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                    {t.status}
+                    {capitalize(t.status)}
                   </span>
                   {profile?.role === "director" && (
-                    <details className="relative">
-                      <summary className="cursor-pointer list-none text-sm text-blue-600 hover:underline">
-                        Edit
-                      </summary>
+                    <CollapsibleDetails
+                      className="relative"
+                      summary="Edit"
+                      summaryClassName="cursor-pointer list-none text-sm text-blue-600 hover:underline"
+                    >
                       <form
                         action={updateTournament.bind(null, t.id)}
                         className="absolute right-0 z-10 mt-2 w-72 space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-lg"
@@ -104,7 +110,7 @@ export default async function TournamentsPage() {
                           >
                             {STATUS_OPTIONS.map((s) => (
                               <option key={s} value={s}>
-                                {s}
+                                {capitalize(s)}
                               </option>
                             ))}
                           </select>
@@ -116,7 +122,7 @@ export default async function TournamentsPage() {
                           Save
                         </button>
                       </form>
-                    </details>
+                    </CollapsibleDetails>
                   )}
                 </div>
               </div>

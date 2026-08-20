@@ -12,6 +12,7 @@ import {
 import { StatusSelect } from "@/components/status-select";
 import { TextLink } from "@/components/text-link";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { CollapsibleDetails } from "@/components/collapsible-details";
 
 const TYPE_LABELS: Record<string, string> = {
   emt: "EMT / Medical",
@@ -146,10 +147,10 @@ export default async function VendorsPage({
                     {isDirector && (
                       <tr className="border-b border-slate-50 last:border-0">
                         <td colSpan={4} className="px-5 pb-3">
-                          <details>
-                            <summary className="cursor-pointer text-xs font-medium text-blue-600">
-                              Edit Vendor
-                            </summary>
+                          <CollapsibleDetails
+                            summary="Edit Vendor"
+                            summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
+                          >
                             <div className="mt-3 grid grid-cols-2 gap-4">
                               <form
                                 action={updateVendor.bind(null, vendor.id)}
@@ -246,7 +247,7 @@ export default async function VendorsPage({
                                 Delete Vendor
                               </ConfirmSubmitButton>
                             </form>
-                          </details>
+                          </CollapsibleDetails>
                         </td>
                       </tr>
                     )}
@@ -263,10 +264,11 @@ export default async function VendorsPage({
       </div>
 
       {isDirector && (
-        <details className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-900">
-            + Add Vendor
-          </summary>
+        <CollapsibleDetails
+          className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4"
+          summary="+ Add Vendor"
+          summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+        >
           <form action={createVendor} className="mt-4 grid grid-cols-2 gap-3">
             <label className="col-span-2 text-sm text-slate-700">
               Vendor name
@@ -317,7 +319,7 @@ export default async function VendorsPage({
               Add vendor
             </button>
           </form>
-        </details>
+        </CollapsibleDetails>
       )}
     </div>
   );
