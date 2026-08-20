@@ -529,6 +529,7 @@ export default async function AssociationsPage({
                       Team name
                       <input
                         name="name"
+                        defaultValue={assoc.name}
                         required
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                       />
