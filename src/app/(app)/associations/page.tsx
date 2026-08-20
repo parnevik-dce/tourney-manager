@@ -17,6 +17,7 @@ import {
   uploadRoster,
 } from "./actions";
 import { StatusSelect } from "@/components/status-select";
+import { CollapsibleDetails } from "@/components/collapsible-details";
 import { TextLink } from "@/components/text-link";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
@@ -138,10 +139,10 @@ export default async function AssociationsPage({
               </div>
 
               {isDirector && (
-                <details className="border-b border-slate-100 px-5 py-3">
-                  <summary className="cursor-pointer text-sm font-medium text-blue-600">
-                    Edit Association
-                  </summary>
+                <CollapsibleDetails
+                  className="border-b border-slate-100 px-5 py-3"
+                  summary="Edit Association"
+                >
                   <div className="mt-3 grid grid-cols-2 gap-4">
                     <form
                       action={updateAssociation.bind(null, assoc.id)}
@@ -235,10 +236,7 @@ export default async function AssociationsPage({
                           No contacts yet.
                         </p>
                       )}
-                      <details>
-                        <summary className="cursor-pointer text-sm font-medium text-blue-600">
-                          + Add Contact
-                        </summary>
+                      <CollapsibleDetails summary="+ Add Contact">
                         <form
                           action={addAssociationContact.bind(null, assoc.id)}
                           className="mt-2 space-y-2"
@@ -272,10 +270,10 @@ export default async function AssociationsPage({
                             Add contact
                           </button>
                         </form>
-                      </details>
+                      </CollapsibleDetails>
                     </div>
                   </div>
-                </details>
+                </CollapsibleDetails>
               )}
 
               {assocTeams.length > 0 && (
@@ -356,10 +354,11 @@ export default async function AssociationsPage({
                               </p>
                             )}
                             {isDirector && (
-                              <details className="mt-1">
-                                <summary className="cursor-pointer text-xs text-blue-600">
-                                  + Add contact
-                                </summary>
+                              <CollapsibleDetails
+                                className="mt-1"
+                                summary="+ Add contact"
+                                summaryClassName="cursor-pointer text-xs text-blue-600"
+                              >
                                 <form
                                   action={addTeamContact.bind(null, team.id)}
                                   className="mt-1 space-y-1"
@@ -395,7 +394,7 @@ export default async function AssociationsPage({
                                     Add
                                   </button>
                                 </form>
-                              </details>
+                              </CollapsibleDetails>
                             )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
@@ -452,15 +451,19 @@ export default async function AssociationsPage({
                             )}
                           </td>
                           <td className="px-5 py-3">
-                            <details>
-                              <summary className="cursor-pointer text-slate-700">
-                                {
-                                  team.players.filter(
-                                    (p: Player) => p.waivers,
-                                  ).length
-                                }
-                                /{team.players.length}
-                              </summary>
+                            <CollapsibleDetails
+                              summary={
+                                <>
+                                  {
+                                    team.players.filter(
+                                      (p: Player) => p.waivers,
+                                    ).length
+                                  }
+                                  /{team.players.length}
+                                </>
+                              }
+                              summaryClassName="cursor-pointer text-slate-700"
+                            >
                               <ul className="mt-2 space-y-1 text-xs">
                                 {team.players.map((p: Player) => (
                                   <li
@@ -503,7 +506,7 @@ export default async function AssociationsPage({
                                   </button>
                                 </form>
                               )}
-                            </details>
+                            </CollapsibleDetails>
                           </td>
                         </tr>
                       );
@@ -513,10 +516,10 @@ export default async function AssociationsPage({
               )}
 
               {isDirector && tournament && (
-                <details className="border-t border-slate-100 px-5 py-3">
-                  <summary className="cursor-pointer text-sm font-medium text-blue-600">
-                    + Add Team
-                  </summary>
+                <CollapsibleDetails
+                  className="border-t border-slate-100 px-5 py-3"
+                  summary="+ Add Team"
+                >
                   <form
                     action={createTeam}
                     className="mt-3 grid grid-cols-2 gap-3"
@@ -594,7 +597,7 @@ export default async function AssociationsPage({
                       Add team
                     </button>
                   </form>
-                </details>
+                </CollapsibleDetails>
               )}
             </div>
           );
@@ -606,10 +609,11 @@ export default async function AssociationsPage({
       </div>
 
       {isDirector && (
-        <details className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-900">
-            + Add Association
-          </summary>
+        <CollapsibleDetails
+          className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4"
+          summary="+ Add Association"
+          summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+        >
           <form action={createAssociation} className="mt-4 grid grid-cols-2 gap-3">
             <label className="col-span-2 text-sm text-slate-700">
               Association name
@@ -647,7 +651,7 @@ export default async function AssociationsPage({
               Add association
             </button>
           </form>
-        </details>
+        </CollapsibleDetails>
       )}
     </div>
   );

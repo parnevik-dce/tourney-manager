@@ -4,6 +4,7 @@ import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
 import { createBudgetItem, updateBudgetItemActual } from "./actions";
 import { AmountInput } from "@/components/amount-input";
+import { CollapsibleDetails } from "@/components/collapsible-details";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -200,10 +201,11 @@ export default async function BudgetPage() {
       )}
 
       {isDirector && tournament && (
-        <details className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-900">
-            + Add Budget Item
-          </summary>
+        <CollapsibleDetails
+          className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4"
+          summary="+ Add Budget Item"
+          summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+        >
           <form
             action={createBudgetItem}
             className="mt-4 grid grid-cols-2 gap-3"
@@ -266,7 +268,7 @@ export default async function BudgetPage() {
               Add budget item
             </button>
           </form>
-        </details>
+        </CollapsibleDetails>
       )}
     </div>
   );

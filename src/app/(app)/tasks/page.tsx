@@ -3,6 +3,7 @@ import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
 import { createTask, updateTaskStatus, loadStarterTasks } from "./actions";
 import { StatusSelect } from "@/components/status-select";
+import { CollapsibleDetails } from "@/components/collapsible-details";
 
 const PHASE_LABELS: Record<string, string> = {
   pre_season: "Pre-Season",
@@ -134,10 +135,11 @@ export default async function TasksPage() {
       )}
 
       {isDirector && tournament && (
-        <details className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <summary className="cursor-pointer text-sm font-semibold text-slate-900">
-            + Add Task
-          </summary>
+        <CollapsibleDetails
+          className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4"
+          summary="+ Add Task"
+          summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+        >
           <form action={createTask} className="mt-4 grid grid-cols-2 gap-3">
             <label className="col-span-2 text-sm text-slate-700">
               Title
@@ -189,7 +191,7 @@ export default async function TasksPage() {
               Add task
             </button>
           </form>
-        </details>
+        </CollapsibleDetails>
       )}
     </div>
   );

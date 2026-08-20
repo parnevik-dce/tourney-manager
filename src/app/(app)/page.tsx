@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
+import { CollapsibleDetails } from "@/components/collapsible-details";
 import {
   updateSiteSettings,
   createSiteUpdate,
@@ -233,10 +234,7 @@ export default async function DashboardPage() {
             </ul>
 
             {isDirector && (
-              <details className="mt-3">
-                <summary className="cursor-pointer text-sm font-medium text-blue-600">
-                  + Add Update
-                </summary>
+              <CollapsibleDetails className="mt-3" summary="+ Add Update">
                 <form
                   action={createSiteUpdate}
                   className="mt-3 space-y-3"
@@ -263,7 +261,7 @@ export default async function DashboardPage() {
                     Add update
                   </button>
                 </form>
-              </details>
+              </CollapsibleDetails>
             )}
           </div>
         </div>
