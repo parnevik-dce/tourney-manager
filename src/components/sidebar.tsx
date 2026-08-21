@@ -19,6 +19,7 @@ type Tournament = {
   name: string;
   status: string;
   public_slug: string;
+  logo_url?: string | null;
 } | null;
 
 type Profile = {
@@ -47,13 +48,23 @@ export function Sidebar({
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-5 py-5">
-        <p className="text-sm font-bold tracking-tight text-slate-900">
-          ICE BREAKER
-        </p>
-        <p className="text-xs font-medium text-slate-400">
-          TOURNAMENT MANAGER
-        </p>
+      <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-5">
+        {tournament?.logo_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={tournament.logo_url}
+            alt=""
+            className="h-9 w-9 shrink-0 rounded object-contain"
+          />
+        )}
+        <div>
+          <p className="text-sm font-bold tracking-tight text-slate-900">
+            ICE BREAKER
+          </p>
+          <p className="text-xs font-medium text-slate-400">
+            TOURNAMENT MANAGER
+          </p>
+        </div>
       </div>
 
       <Link

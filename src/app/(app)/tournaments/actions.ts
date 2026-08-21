@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentProfile } from "@/lib/profile";
 
 export async function createTournament(formData: FormData) {
   const supabase = await createClient();
@@ -107,4 +109,40 @@ export async function updateTournament(tournamentId: string, formData: FormData)
   }
 
   revalidatePath("/tournaments");
+}
+
+export async function uploadTournamentLogo(
+  tournamentId: string,
+  formData: FormData,
+) {
+  const profile = await getCurrentProfile();
+  if (profile?.role !== "director") throw new Error("Not authorized");
+
+  const file = formData.get("logo_file");
+  if (!(file instanceof File) || file.size === 0) return;
+
+  const admin = createAdminClient();
+  const path = `${tournamentId}/${Date.now()}-${file.name}`;
+
+  const { error: uploadError } = await admin.storage
+    .from("tournament-logos")
+    .upload(path, file, { contentType: file.type });
+
+  if (uploadError) throw new Error(uploadError.message);
+
+  const {
+    data: { publicUrl },
+  } = admin.storage.from("tournament-logos").getPublicUrl(path);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("tournaments")
+    .update({ logo_url: publicUrl })
+    .eq("id", tournamentId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/");
+  revalidatePath("/tournaments");
+  revalidatePath("/site/[slug]", "page");
 }

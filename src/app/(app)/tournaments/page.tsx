@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
-import { createTournament, updateTournament } from "./actions";
+import {
+  createTournament,
+  updateTournament,
+  uploadTournamentLogo,
+} from "./actions";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 
 const STATUS_OPTIONS = ["active", "closed", "archived"];
@@ -27,9 +31,19 @@ export default async function TournamentsPage() {
           tournaments.map((t) => (
             <li key={t.id} className="px-4 py-3">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-slate-900">{t.name}</p>
-                  <p className="text-sm text-slate-500">{t.year}</p>
+                <div className="flex items-center gap-3">
+                  {t.logo_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={t.logo_url}
+                      alt=""
+                      className="h-10 w-10 rounded object-contain"
+                    />
+                  )}
+                  <div>
+                    <p className="font-medium text-slate-900">{t.name}</p>
+                    <p className="text-sm text-slate-500">{t.year}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -41,9 +55,10 @@ export default async function TournamentsPage() {
                       summary="Edit"
                       summaryClassName="cursor-pointer list-none text-sm text-blue-600 hover:underline"
                     >
+                      <div className="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-lg">
                       <form
                         action={updateTournament.bind(null, t.id)}
-                        className="absolute right-0 z-10 mt-2 w-72 space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-lg"
+                        className="space-y-3"
                       >
                         <label className="block text-sm text-slate-700">
                           Year
@@ -122,6 +137,27 @@ export default async function TournamentsPage() {
                           Save
                         </button>
                       </form>
+                      <form
+                        action={uploadTournamentLogo.bind(null, t.id)}
+                        className="space-y-2 border-t border-slate-100 pt-3"
+                      >
+                        <label className="block text-sm text-slate-700">
+                          Logo
+                          <input
+                            name="logo_file"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                            className="mt-1 w-full text-sm"
+                          />
+                        </label>
+                        <button
+                          type="submit"
+                          className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                        >
+                          Upload logo
+                        </button>
+                      </form>
+                      </div>
                     </CollapsibleDetails>
                   )}
                 </div>

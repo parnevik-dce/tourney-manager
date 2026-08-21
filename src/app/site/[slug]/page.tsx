@@ -90,7 +90,15 @@ export default async function PublicSitePage({
   return (
     <Shell>
       <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        {tournament.logo_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={tournament.logo_url}
+            alt=""
+            className="mx-auto h-16 w-16 rounded object-contain"
+          />
+        )}
+        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Ice Breaker Tournament Manager
         </p>
         <h1 className="mt-1 text-2xl font-bold text-slate-900">
