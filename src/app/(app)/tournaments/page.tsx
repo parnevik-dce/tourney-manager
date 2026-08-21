@@ -6,6 +6,7 @@ import {
   uploadTournamentLogo,
 } from "./actions";
 import { CollapsibleDetails } from "@/components/collapsible-details";
+import { LogoUploadForm } from "@/components/logo-upload-form";
 
 const STATUS_OPTIONS = ["active", "closed", "archived"];
 
@@ -56,107 +57,90 @@ export default async function TournamentsPage() {
                       summaryClassName="cursor-pointer list-none text-sm text-blue-600 hover:underline"
                     >
                       <div className="absolute right-0 z-10 mt-2 w-72 space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-lg">
-                      <form
-                        action={updateTournament.bind(null, t.id)}
-                        className="space-y-3"
-                      >
-                        <label className="block text-sm text-slate-700">
-                          Year
-                          <input
-                            name="year"
-                            type="number"
-                            required
-                            defaultValue={t.year}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          Name
-                          <input
-                            name="name"
-                            type="text"
-                            required
-                            defaultValue={t.name}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          Start date
-                          <input
-                            name="start_date"
-                            type="date"
-                            defaultValue={t.start_date ?? ""}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          End date
-                          <input
-                            name="end_date"
-                            type="date"
-                            defaultValue={t.end_date ?? ""}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          Location
-                          <input
-                            name="location"
-                            type="text"
-                            defaultValue={t.location ?? ""}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          Public URL slug
-                          <input
-                            name="public_slug"
-                            type="text"
-                            defaultValue={t.public_slug}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                          />
-                        </label>
-                        <label className="block text-sm text-slate-700">
-                          Status
-                          <select
-                            name="status"
-                            defaultValue={t.status}
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                        <form
+                          action={updateTournament.bind(null, t.id)}
+                          className="space-y-3"
+                        >
+                          <label className="block text-sm text-slate-700">
+                            Year
+                            <input
+                              name="year"
+                              type="number"
+                              required
+                              defaultValue={t.year}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Name
+                            <input
+                              name="name"
+                              type="text"
+                              required
+                              defaultValue={t.name}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Start date
+                            <input
+                              name="start_date"
+                              type="date"
+                              defaultValue={t.start_date ?? ""}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            End date
+                            <input
+                              name="end_date"
+                              type="date"
+                              defaultValue={t.end_date ?? ""}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Location
+                            <input
+                              name="location"
+                              type="text"
+                              defaultValue={t.location ?? ""}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Public URL slug
+                            <input
+                              name="public_slug"
+                              type="text"
+                              defaultValue={t.public_slug}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Status
+                            <select
+                              name="status"
+                              defaultValue={t.status}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            >
+                              {STATUS_OPTIONS.map((s) => (
+                                <option key={s} value={s}>
+                                  {capitalize(s)}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <button
+                            type="submit"
+                            className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
                           >
-                            {STATUS_OPTIONS.map((s) => (
-                              <option key={s} value={s}>
-                                {capitalize(s)}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button
-                          type="submit"
-                          className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                        >
-                          Save
-                        </button>
-                      </form>
-                      <form
-                        action={uploadTournamentLogo.bind(null, t.id)}
-                        className="space-y-2 border-t border-slate-100 pt-3"
-                      >
-                        <label className="block text-sm text-slate-700">
-                          Logo
-                          <input
-                            name="logo_file"
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                            className="mt-1 w-full text-sm"
-                          />
-                        </label>
-                        <button
-                          type="submit"
-                          className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                        >
-                          Upload logo
-                        </button>
-                      </form>
+                            Save
+                          </button>
+                        </form>
+                        <LogoUploadForm
+                          action={uploadTournamentLogo.bind(null, t.id)}
+                        />
                       </div>
                     </CollapsibleDetails>
                   )}
