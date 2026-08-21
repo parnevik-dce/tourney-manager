@@ -16,7 +16,7 @@ export function StatusSelect({
         name="status"
         defaultValue={status}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="rounded-md border border-slate-300 px-2 py-1 text-sm"
+        className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
