@@ -13,6 +13,7 @@ export async function createAssociation(formData: FormData) {
   const name = String(formData.get("name") ?? "");
   const mascot = String(formData.get("mascot") || "") || null;
   const contactName = String(formData.get("contact_name") || "");
+  const contactRole = String(formData.get("contact_role") || "") || null;
   const contactEmail = String(formData.get("contact_email") || "") || null;
   const contactPhone = String(formData.get("contact_phone") || "") || null;
 
@@ -30,6 +31,7 @@ export async function createAssociation(formData: FormData) {
       .insert({
         association_id: association.id,
         name: contactName,
+        role: contactRole,
         email: contactEmail,
         phone: contactPhone,
       });
@@ -64,12 +66,13 @@ export async function updateAssociationContact(
 ) {
   const supabase = await createClient();
   const name = String(formData.get("name") ?? "");
+  const role = String(formData.get("role") || "") || null;
   const phone = String(formData.get("phone") || "") || null;
   const email = String(formData.get("email") || "") || null;
 
   const { error } = await supabase
     .from("association_contacts")
-    .update({ name, phone, email })
+    .update({ name, role, phone, email })
     .eq("id", contactId);
 
   if (error) throw new Error(error.message);
@@ -83,6 +86,7 @@ export async function addAssociationContact(
 ) {
   const supabase = await createClient();
   const name = String(formData.get("name") ?? "");
+  const role = String(formData.get("role") || "") || null;
   const phone = String(formData.get("phone") || "") || null;
   const email = String(formData.get("email") || "") || null;
   if (!name.trim()) return;
@@ -90,6 +94,7 @@ export async function addAssociationContact(
   const { error } = await supabase.from("association_contacts").insert({
     association_id: associationId,
     name,
+    role,
     phone,
     email,
   });
