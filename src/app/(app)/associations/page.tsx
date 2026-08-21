@@ -126,6 +126,7 @@ export default async function AssociationsPage({
                   {assoc.association_contacts?.map((c: Contact) => (
                     <p key={c.id} className="text-sm text-slate-500">
                       {c.name}
+                      {c.role && ` (${c.role})`}
                       {c.phone && ` · ${c.phone}`}
                       {c.email && ` · ${c.email}`}
                       {c.phone && (
@@ -209,6 +210,15 @@ export default async function AssociationsPage({
                               />
                             </label>
                             <label className="block text-sm text-slate-700">
+                              Contact role
+                              <input
+                                name="role"
+                                defaultValue={c.role ?? ""}
+                                placeholder="President, Registrar"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="block text-sm text-slate-700">
                               Contact phone
                               <input
                                 name="phone"
@@ -261,6 +271,14 @@ export default async function AssociationsPage({
                             <input
                               name="name"
                               required
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Role
+                            <input
+                              name="role"
+                              placeholder="President, Registrar"
                               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                             />
                           </label>
@@ -701,6 +719,14 @@ export default async function AssociationsPage({
               Contact name
               <input
                 name="contact_name"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              />
+            </label>
+            <label className="text-sm text-slate-700">
+              Contact role
+              <input
+                name="contact_role"
+                placeholder="President, Registrar"
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
               />
             </label>
