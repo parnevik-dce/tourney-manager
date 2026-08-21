@@ -9,6 +9,7 @@ import {
   deleteAssociationContact,
   deleteAssociation,
   createTeam,
+  updateTeam,
   updateTeamStatus,
   addPlayer,
   addTeamContact,
@@ -332,14 +333,71 @@ export default async function AssociationsPage({
                           <td className="px-5 py-3 font-medium text-slate-900">
                             {team.name}
                             {isDirector && (
-                              <form action={deleteTeam.bind(null, team.id)}>
-                                <ConfirmSubmitButton
-                                  confirmText={`Delete ${team.name}? This can't be undone.`}
-                                  className="mt-0.5 block text-xs font-normal text-red-600 hover:underline"
+                              <>
+                                <form action={deleteTeam.bind(null, team.id)}>
+                                  <ConfirmSubmitButton
+                                    confirmText={`Delete ${team.name}? This can't be undone.`}
+                                    className="mt-0.5 block text-xs font-normal text-red-600 hover:underline"
+                                  >
+                                    Delete
+                                  </ConfirmSubmitButton>
+                                </form>
+                                <CollapsibleDetails
+                                  className="relative mt-0.5"
+                                  summary="Edit"
+                                  summaryClassName="cursor-pointer text-xs font-normal text-blue-600"
                                 >
-                                  Delete
-                                </ConfirmSubmitButton>
-                              </form>
+                                  <form
+                                    key={`${team.name}-${team.division_id}-${team.registration_status}`}
+                                    action={updateTeam.bind(null, team.id)}
+                                    className="absolute left-0 z-10 mt-1 w-64 space-y-2 rounded-lg border border-slate-200 bg-white p-3 shadow-lg"
+                                  >
+                                    <label className="block text-xs font-normal text-slate-700">
+                                      Team name
+                                      <input
+                                        name="name"
+                                        defaultValue={team.name}
+                                        required
+                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                      />
+                                    </label>
+                                    <label className="block text-xs font-normal text-slate-700">
+                                      Division
+                                      <select
+                                        name="division_id"
+                                        defaultValue={team.division_id ?? ""}
+                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                      >
+                                        <option value="">Unassigned</option>
+                                        {divisions.map((d) => (
+                                          <option key={d.id} value={d.id}>
+                                            {d.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                    <label className="block text-xs font-normal text-slate-700">
+                                      Status
+                                      <select
+                                        name="registration_status"
+                                        defaultValue={team.registration_status}
+                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                      >
+                                        <option value="pending">Pending</option>
+                                        <option value="registered">
+                                          Registered
+                                        </option>
+                                      </select>
+                                    </label>
+                                    <button
+                                      type="submit"
+                                      className="w-full rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                                    >
+                                      Save
+                                    </button>
+                                  </form>
+                                </CollapsibleDetails>
+                              </>
                             )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">

@@ -149,6 +149,25 @@ export async function createTeam(formData: FormData) {
   revalidatePath("/associations");
 }
 
+export async function updateTeam(teamId: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const name = String(formData.get("name") ?? "");
+  const division_id = String(formData.get("division_id") || "") || null;
+  const registration_status = String(
+    formData.get("registration_status") || "pending",
+  );
+
+  const { error } = await supabase
+    .from("teams")
+    .update({ name, division_id, registration_status })
+    .eq("id", teamId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
 export async function updateTeamStatus(teamId: string, formData: FormData) {
   const supabase = await createClient();
   const status = String(formData.get("status"));
