@@ -45,8 +45,7 @@ export default async function DashboardPage() {
   const siteUpdates = rawUpdates ?? [];
 
   const waiverUrl = tournament
-    ? siteSettings?.waiver_form_url ||
-      `${process.env.NEXT_PUBLIC_SITE_URL}/waiver/${tournament.public_slug}`
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/waiver/${tournament.public_slug}`
     : null;
   const qrSvg = waiverUrl
     ? await QRCode.toString(waiverUrl, { type: "svg", margin: 1, width: 120 })
@@ -153,18 +152,17 @@ export default async function DashboardPage() {
                 />
               </label>
               <label className="col-span-2 text-sm text-slate-700">
-                Waiver form URL (external)
-                <input
-                  name="waiver_form_url"
-                  type="url"
-                  defaultValue={siteSettings?.waiver_form_url ?? ""}
-                  placeholder="https://docs.google.com/forms/d/e/..."
+                Waiver / release content
+                <textarea
+                  name="waiver_content"
+                  defaultValue={siteSettings?.waiver_content ?? ""}
+                  rows={6}
+                  placeholder="Paste the liability waiver / release text shown to families on the waiver form..."
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                 />
                 <span className="mt-1 block text-xs font-normal text-slate-400">
-                  If set, all &quot;Waiver Form&quot; links use this external
-                  form instead of the built-in one. Leave blank to use the
-                  built-in waiver form and its roster/waiver tracking.
+                  Shown above the consent checkbox on the built-in waiver
+                  form.
                 </span>
               </label>
               <button

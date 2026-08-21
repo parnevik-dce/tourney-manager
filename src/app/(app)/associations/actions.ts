@@ -223,20 +223,6 @@ export async function addTeamContact(teamId: string, formData: FormData) {
   revalidatePath("/associations");
 }
 
-export async function addPlayer(teamId: string, formData: FormData) {
-  const supabase = await createClient();
-  const full_name = String(formData.get("full_name") ?? "");
-  if (!full_name.trim()) return;
-
-  const { error } = await supabase
-    .from("players")
-    .insert({ team_id: teamId, full_name });
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/associations");
-}
-
 export async function uploadRoster(teamId: string, formData: FormData) {
   const profile = await getCurrentProfile();
   if (profile?.role !== "director") throw new Error("Not authorized");

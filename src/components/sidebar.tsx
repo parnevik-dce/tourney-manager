@@ -31,7 +31,6 @@ type Profile = {
 type SiteSettings = {
   published: boolean;
   maintenance_mode: boolean;
-  waiver_form_url?: string | null;
 } | null;
 
 export function Sidebar({
@@ -130,10 +129,7 @@ export function Sidebar({
             )}
           </div>
           <a
-            href={
-              siteSettings?.waiver_form_url ||
-              `/waiver/${tournament.public_slug}`
-            }
+            href={`/waiver/${tournament.public_slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 block text-sm text-slate-600 hover:text-blue-700 hover:underline"
