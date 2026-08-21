@@ -158,6 +158,26 @@ export async function updateTeamStatus(teamId: string, formData: FormData) {
   revalidatePath("/associations");
 }
 
+export async function updateTeamContact(
+  contactId: string,
+  formData: FormData,
+) {
+  const supabase = await createClient();
+  const name = String(formData.get("name") ?? "");
+  const role = String(formData.get("role") || "") || null;
+  const phone = String(formData.get("phone") || "") || null;
+  const email = String(formData.get("email") || "") || null;
+
+  const { error } = await supabase
+    .from("team_contacts")
+    .update({ name, role, phone, email })
+    .eq("id", contactId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+}
+
 export async function addTeamContact(teamId: string, formData: FormData) {
   const supabase = await createClient();
   const name = String(formData.get("name") ?? "");

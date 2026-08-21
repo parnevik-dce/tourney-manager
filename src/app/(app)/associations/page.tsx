@@ -12,6 +12,7 @@ import {
   updateTeamStatus,
   addPlayer,
   addTeamContact,
+  updateTeamContact,
   deleteTeamContact,
   deleteTeam,
   uploadRoster,
@@ -335,6 +336,7 @@ export default async function AssociationsPage({
                                       <TextLink phone={contact.phone} />
                                     </>
                                   )}
+                                  {contact.email && ` · ${contact.email}`}
                                   {isDirector && (
                                     <>
                                       {" · "}
@@ -352,6 +354,55 @@ export default async function AssociationsPage({
                                           Delete
                                         </ConfirmSubmitButton>
                                       </form>
+                                      <CollapsibleDetails
+                                        className="inline"
+                                        summary="Edit"
+                                        summaryClassName="ml-1.5 cursor-pointer text-xs text-blue-600"
+                                      >
+                                        <form
+                                          action={updateTeamContact.bind(
+                                            null,
+                                            contact.id,
+                                          )}
+                                          className="mt-1 space-y-1"
+                                        >
+                                          <input
+                                            name="name"
+                                            defaultValue={contact.name}
+                                            aria-label="Contact name"
+                                            placeholder="Name"
+                                            required
+                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                          />
+                                          <input
+                                            name="role"
+                                            defaultValue={contact.role ?? ""}
+                                            aria-label="Contact role"
+                                            placeholder="Role"
+                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                          />
+                                          <input
+                                            name="phone"
+                                            defaultValue={contact.phone ?? ""}
+                                            aria-label="Contact phone"
+                                            placeholder="Phone"
+                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                          />
+                                          <input
+                                            name="email"
+                                            defaultValue={contact.email ?? ""}
+                                            aria-label="Contact email"
+                                            placeholder="Email"
+                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                          />
+                                          <button
+                                            type="submit"
+                                            className="text-xs text-blue-600 hover:underline"
+                                          >
+                                            Save
+                                          </button>
+                                        </form>
+                                      </CollapsibleDetails>
                                     </>
                                   )}
                                 </div>
