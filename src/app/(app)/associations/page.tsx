@@ -11,7 +11,6 @@ import {
   createTeam,
   updateTeam,
   updateTeamStatus,
-  addPlayer,
   addTeamContact,
   updateTeamContact,
   deleteTeamContact,
@@ -23,10 +22,12 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 import { TextLink } from "@/components/text-link";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
-type Player = {
+type Waiver = {
   id: string;
-  full_name: string;
-  waivers: { id: string } | null;
+  participant_first_name: string;
+  participant_last_name: string;
+  guardian_first_name: string | null;
+  guardian_last_name: string | null;
 };
 
 type Contact = {
@@ -58,7 +59,7 @@ export default async function AssociationsPage({
         supabase
           .from("teams")
           .select(
-            "*, team_contacts(*), divisions(name), players(id, full_name, waivers(id))",
+            "*, team_contacts(*), divisions(name), waivers(id, participant_first_name, participant_last_name, guardian_first_name, guardian_last_name)",
           )
           .eq("tournament_id", tournament.id)
           .order("name"),
@@ -593,59 +594,29 @@ export default async function AssociationsPage({
                           </td>
                           <td className="px-5 py-3">
                             <CollapsibleDetails
-                              summary={
-                                <>
-                                  {
-                                    team.players.filter(
-                                      (p: Player) => p.waivers,
-                                    ).length
-                                  }
-                                  /{team.players.length}
-                                </>
-                              }
+                              summary={team.waivers.length}
                               summaryClassName="cursor-pointer text-slate-700"
                             >
-                              <ul className="mt-2 space-y-1 text-xs">
-                                {team.players.map((p: Player) => (
-                                  <li
-                                    key={p.id}
-                                    className="flex items-center justify-between gap-3"
-                                  >
-                                    <span className="text-slate-600">
-                                      {p.full_name}
-                                    </span>
-                                    <span
-                                      className={
-                                        p.waivers
-                                          ? "text-green-600"
-                                          : "text-slate-400"
-                                      }
-                                    >
-                                      {p.waivers
-                                        ? "Submitted"
-                                        : "Not submitted"}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                              {isDirector && (
-                                <form
-                                  action={addPlayer.bind(null, team.id)}
-                                  className="mt-2 flex items-center gap-1"
-                                >
-                                  <input
-                                    name="full_name"
-                                    aria-label="Player name"
-                                    placeholder="Player name"
-                                    className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <button
-                                    type="submit"
-                                    className="text-xs text-blue-600 hover:underline"
-                                  >
-                                    Add
-                                  </button>
-                                </form>
+                              {team.waivers.length ? (
+                                <ul className="mt-2 space-y-1 text-xs">
+                                  {team.waivers.map((w: Waiver) => (
+                                    <li key={w.id} className="text-slate-600">
+                                      {w.participant_first_name}{" "}
+                                      {w.participant_last_name}
+                                      {w.guardian_first_name && (
+                                        <span className="text-slate-400">
+                                          {" "}
+                                          — guardian {w.guardian_first_name}{" "}
+                                          {w.guardian_last_name}
+                                        </span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="mt-2 text-xs text-slate-400">
+                                  No waivers submitted yet.
+                                </p>
                               )}
                             </CollapsibleDetails>
                           </td>

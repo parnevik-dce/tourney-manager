@@ -11,12 +11,11 @@ export async function updateSiteSettings(formData: FormData) {
 
   const hero_title = String(formData.get("hero_title") || "") || null;
   const hero_subtitle = String(formData.get("hero_subtitle") || "") || null;
-  const waiver_form_url =
-    String(formData.get("waiver_form_url") || "") || null;
+  const waiver_content = String(formData.get("waiver_content") || "") || null;
 
   const { error } = await supabase
     .from("site_settings")
-    .update({ hero_title, hero_subtitle, waiver_form_url })
+    .update({ hero_title, hero_subtitle, waiver_content })
     .eq("tournament_id", tournament.id);
 
   if (error) throw new Error(error.message);

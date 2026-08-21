@@ -26,7 +26,7 @@ export default async function AppLayout({
   const { data: siteSettings } = tournament
     ? await supabase
         .from("site_settings")
-        .select("published, maintenance_mode, waiver_form_url")
+        .select("published, maintenance_mode")
         .eq("tournament_id", tournament.id)
         .maybeSingle()
     : { data: null };
