@@ -464,3 +464,101 @@ export async function deletePlayer(playerId: string) {
 
   revalidatePath("/associations/rosters");
 }
+
+const ASSOCIATION_CSV_HEADERS = [
+  "association_name",
+  "president_name",
+  "president_email",
+  "boys_director_name",
+  "boys_director_email",
+  "treasurer_name",
+  "treasurer_email",
+] as const;
+
+const ASSOCIATION_CONTACT_SLOTS = [
+  { nameKey: "president_name", emailKey: "president_email", role: "President" },
+  {
+    nameKey: "boys_director_name",
+    emailKey: "boys_director_email",
+    role: "Boys Director",
+  },
+  { nameKey: "treasurer_name", emailKey: "treasurer_email", role: "Treasurer" },
+] as const;
+
+export async function importAssociationsCsv(formData: FormData) {
+  const profile = await getCurrentProfile();
+  if (profile?.role !== "director") throw new Error("Not authorized");
+
+  const file = formData.get("csv_file");
+  if (!(file instanceof File) || file.size === 0) return;
+
+  const text = await file.text();
+  const rows = parseCsv(text).filter((r) => r.some((c) => c.trim() !== ""));
+  if (rows.length < 2) return;
+
+  const header = rows[0].map((h) =>
+    h.trim().toLowerCase().replace(/\s+/g, "_"),
+  );
+  const colIndex = Object.fromEntries(
+    ASSOCIATION_CSV_HEADERS.map((h) => [h, header.indexOf(h)]),
+  );
+
+  const supabase = await createClient();
+
+  let imported = 0;
+  let skipped = 0;
+
+  for (const r of rows.slice(1)) {
+    const associationName = r[colIndex.association_name]?.trim();
+    if (!associationName) {
+      skipped++;
+      continue;
+    }
+
+    const { data: existing } = await supabase
+      .from("associations")
+      .select("id")
+      .ilike("name", associationName)
+      .maybeSingle();
+
+    let associationId: string | undefined = existing?.id;
+    if (!associationId) {
+      const { data: created, error: createError } = await supabase
+        .from("associations")
+        .insert({ name: associationName })
+        .select("id")
+        .single();
+      if (createError) throw new Error(createError.message);
+      associationId = created.id;
+    }
+
+    for (const slot of ASSOCIATION_CONTACT_SLOTS) {
+      const name = r[colIndex[slot.nameKey]]?.trim();
+      const email = r[colIndex[slot.emailKey]]?.trim() || null;
+      if (!name) continue;
+
+      const { error: contactError } = await supabase
+        .from("association_contacts")
+        .insert({
+          association_id: associationId,
+          name,
+          email,
+          role: slot.role,
+        });
+      if (contactError) throw new Error(contactError.message);
+    }
+
+    imported++;
+  }
+
+  revalidatePath("/associations");
+  revalidatePath("/associations/list");
+
+  if (skipped > 0) {
+    redirect(
+      `/associations/list?error=${encodeURIComponent(
+        `Imported ${imported} association${imported === 1 ? "" : "s"}. Skipped ${skipped} row${skipped === 1 ? "" : "s"} missing an association name.`,
+      )}`,
+    );
+  }
+}
