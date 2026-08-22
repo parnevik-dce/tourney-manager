@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
@@ -140,121 +139,115 @@ export default async function ContactsPage({
 
       <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         {filtered.length ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-5 py-2 font-medium">Name</th>
-                <th className="px-5 py-2 font-medium">Role</th>
-                <th className="px-5 py-2 font-medium">Phone</th>
-                <th className="px-5 py-2 font-medium">Email</th>
-                <th className="px-5 py-2 font-medium">Belongs To</th>
-                <th className="px-5 py-2 font-medium">Type</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div className="min-w-[800px] text-sm">
+            <div className="grid grid-cols-[1.5fr_1fr_1fr_1.5fr_1.5fr_0.75fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
+              <span>Name</span>
+              <span>Role</span>
+              <span>Phone</span>
+              <span>Email</span>
+              <span>Belongs To</span>
+              <span>Type</span>
+              <span />
+            </div>
+            <div className="divide-y divide-slate-50">
               {filtered.map((c) => (
-                <Fragment key={`${c.kind}-${c.id}`}>
-                  <tr className="border-b border-slate-50 last:border-0">
-                    <td className="px-5 py-3 font-medium text-slate-900">
-                      {c.name}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {c.role ?? "—"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {c.phone ? <TextLink phone={c.phone} /> : "—"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {c.email ?? "—"}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500">
-                      {c.belongsTo}
-                    </td>
-                    <td className="px-5 py-3 text-slate-500 capitalize">
-                      {c.kind}
-                    </td>
-                  </tr>
-                  {isDirector && (
-                    <tr className="border-b border-slate-50 last:border-0">
-                      <td colSpan={6} className="px-5 pb-3">
-                        <CollapsibleDetails
-                          summary="Edit"
-                          summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
+                <CollapsibleDetails
+                  key={`${c.kind}-${c.id}`}
+                  summaryClassName="grid grid-cols-[1.5fr_1fr_1fr_1.5fr_1.5fr_0.75fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                  summary={
+                    <>
+                      <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
+                        {c.name}
+                      </span>
+                      <span className="text-slate-500">{c.role ?? "—"}</span>
+                      <span className="text-slate-500">
+                        {c.phone ? <TextLink phone={c.phone} /> : "—"}
+                      </span>
+                      <span className="text-slate-500">
+                        {c.email ?? "—"}
+                      </span>
+                      <span className="text-slate-500">{c.belongsTo}</span>
+                      <span className="text-slate-500 capitalize">
+                        {c.kind}
+                      </span>
+                      {isDirector ? (
+                        <form
+                          action={(
+                            c.kind === "team"
+                              ? deleteTeamContact
+                              : deleteAssociationContact
+                          ).bind(null, c.id)}
                         >
-                          <div className="mt-3 grid grid-cols-2 gap-4">
-                            <form
-                              key={`${c.name}-${c.role}-${c.phone}-${c.email}`}
-                              action={(
-                                c.kind === "team"
-                                  ? updateTeamContact
-                                  : updateAssociationContact
-                              ).bind(null, c.id)}
-                              className="space-y-2"
-                            >
-                              <label className="block text-sm text-slate-700">
-                                Name
-                                <input
-                                  name="name"
-                                  defaultValue={c.name}
-                                  required
-                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                />
-                              </label>
-                              <label className="block text-sm text-slate-700">
-                                Role
-                                <input
-                                  name="role"
-                                  defaultValue={c.role ?? ""}
-                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                />
-                              </label>
-                              <label className="block text-sm text-slate-700">
-                                Phone
-                                <input
-                                  name="phone"
-                                  defaultValue={c.phone ?? ""}
-                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                />
-                              </label>
-                              <label className="block text-sm text-slate-700">
-                                Email
-                                <input
-                                  name="email"
-                                  defaultValue={c.email ?? ""}
-                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                />
-                              </label>
-                              <button
-                                type="submit"
-                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                              >
-                                Save
-                              </button>
-                            </form>
-                            <form
-                              action={(
-                                c.kind === "team"
-                                  ? deleteTeamContact
-                                  : deleteAssociationContact
-                              ).bind(null, c.id)}
-                              className="flex items-start"
-                            >
-                              <ConfirmSubmitButton
-                                confirmText={`Delete contact ${c.name}?`}
-                                className="text-sm text-red-600 hover:underline"
-                              >
-                                Delete Contact
-                              </ConfirmSubmitButton>
-                            </form>
-                          </div>
-                        </CollapsibleDetails>
-                      </td>
-                    </tr>
+                          <ConfirmSubmitButton
+                            confirmText={`Delete contact ${c.name}?`}
+                            className="text-xs text-red-600 hover:underline"
+                          >
+                            Delete
+                          </ConfirmSubmitButton>
+                        </form>
+                      ) : (
+                        <span />
+                      )}
+                    </>
+                  }
+                >
+                  {isDirector && (
+                    <div className="border-t border-slate-100 px-5 py-4">
+                      <form
+                        key={`${c.name}-${c.role}-${c.phone}-${c.email}`}
+                        action={(
+                          c.kind === "team"
+                            ? updateTeamContact
+                            : updateAssociationContact
+                        ).bind(null, c.id)}
+                        className="grid max-w-md grid-cols-2 gap-3"
+                      >
+                        <label className="col-span-2 block text-sm text-slate-700">
+                          Name
+                          <input
+                            name="name"
+                            defaultValue={c.name}
+                            required
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Role
+                          <input
+                            name="role"
+                            defaultValue={c.role ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="block text-sm text-slate-700">
+                          Phone
+                          <input
+                            name="phone"
+                            defaultValue={c.phone ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <label className="col-span-2 block text-sm text-slate-700">
+                          Email
+                          <input
+                            name="email"
+                            defaultValue={c.email ?? ""}
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                          />
+                        </label>
+                        <button
+                          type="submit"
+                          className="col-span-2 w-fit rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                        >
+                          Save
+                        </button>
+                      </form>
+                    </div>
                   )}
-                </Fragment>
+                </CollapsibleDetails>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         ) : (
           <p className="px-5 py-6 text-center text-sm text-slate-500">
             No contacts match.

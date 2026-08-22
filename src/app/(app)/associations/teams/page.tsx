@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
@@ -71,229 +70,220 @@ export default async function TeamsListPage() {
       {tournament && (
         <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
           {teams.length ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-2 font-medium">Team</th>
-                  <th className="px-5 py-2 font-medium">Association</th>
-                  <th className="px-5 py-2 font-medium">Division</th>
-                  <th className="px-5 py-2 font-medium">Status</th>
-                  <th className="px-5 py-2 font-medium">Players</th>
-                  <th className="px-5 py-2 font-medium">Waivers</th>
-                </tr>
-              </thead>
-              <tbody>
+            <div className="min-w-[720px] text-sm">
+              <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
+                <span>Team</span>
+                <span>Association</span>
+                <span>Division</span>
+                <span>Status</span>
+                <span>Players</span>
+                <span>Waivers</span>
+                <span />
+              </div>
+              <div className="divide-y divide-slate-50">
                 {teams.map((team) => {
                   const contacts: Contact[] = team.team_contacts ?? [];
                   return (
-                    <Fragment key={team.id}>
-                      <tr className="border-b border-slate-50 last:border-0">
-                        <td className="px-5 py-3 font-medium text-slate-900">
-                          {team.name}
-                        </td>
-                        <td className="px-5 py-3 text-slate-500">
-                          {team.associations?.name ?? "—"}
-                        </td>
-                        <td className="px-5 py-3 text-slate-500">
-                          {team.divisions?.name ?? "—"}
-                        </td>
-                        <td className="px-5 py-3">
+                    <CollapsibleDetails
+                      key={team.id}
+                      summaryClassName="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                      summary={
+                        <>
+                          <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
+                            {team.name}
+                          </span>
+                          <span className="text-slate-500">
+                            {team.associations?.name ?? "—"}
+                          </span>
+                          <span className="text-slate-500">
+                            {team.divisions?.name ?? "—"}
+                          </span>
                           <span className="capitalize text-slate-700">
                             {team.registration_status}
                           </span>
-                        </td>
-                        <td className="px-5 py-3 text-slate-500">
-                          {team.players?.length ?? 0}
-                        </td>
-                        <td className="px-5 py-3 text-slate-500">
-                          {team.waivers?.length ?? 0}
-                        </td>
-                      </tr>
+                          <span className="text-slate-500">
+                            {team.players?.length ?? 0}
+                          </span>
+                          <span className="text-slate-500">
+                            {team.waivers?.length ?? 0}
+                          </span>
+                          {isDirector ? (
+                            <form action={deleteTeam.bind(null, team.id)}>
+                              <ConfirmSubmitButton
+                                confirmText={`Delete ${team.name}? This can't be undone.`}
+                                className="text-xs text-red-600 hover:underline"
+                              >
+                                Delete
+                              </ConfirmSubmitButton>
+                            </form>
+                          ) : (
+                            <span />
+                          )}
+                        </>
+                      }
+                    >
                       {isDirector && (
-                        <tr className="border-b border-slate-50 last:border-0">
-                          <td colSpan={6} className="px-5 pb-3">
-                            <CollapsibleDetails
-                              summary="Edit"
-                              summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
+                        <div className="grid grid-cols-2 gap-4 border-t border-slate-100 px-5 py-4">
+                          <form
+                            key={`${team.name}-${team.division_id}-${team.registration_status}`}
+                            action={updateTeam.bind(null, team.id)}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm text-slate-700">
+                              Team name
+                              <input
+                                name="name"
+                                defaultValue={team.name}
+                                required
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="block text-sm text-slate-700">
+                              Division
+                              <select
+                                name="division_id"
+                                defaultValue={team.division_id ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              >
+                                <option value="">Unassigned</option>
+                                {divisions.map((d) => (
+                                  <option key={d.id} value={d.id}>
+                                    {d.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="block text-sm text-slate-700">
+                              Status
+                              <select
+                                name="registration_status"
+                                defaultValue={team.registration_status}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="registered">
+                                  Registered
+                                </option>
+                              </select>
+                            </label>
+                            <button
+                              type="submit"
+                              className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
                             >
-                              <div className="mt-3 grid grid-cols-2 gap-4">
+                              Save
+                            </button>
+                          </form>
+
+                          <div className="col-span-2 space-y-3 border-t border-slate-100 pt-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                              Contacts
+                            </p>
+                            {contacts.map((c) => (
+                              <div
+                                key={c.id}
+                                className="flex items-end gap-2"
+                              >
                                 <form
-                                  key={`${team.name}-${team.division_id}-${team.registration_status}`}
-                                  action={updateTeam.bind(null, team.id)}
-                                  className="space-y-2"
+                                  action={updateTeamContact.bind(
+                                    null,
+                                    c.id,
+                                  )}
+                                  className="grid flex-1 grid-cols-4 gap-2"
                                 >
-                                  <label className="block text-sm text-slate-700">
-                                    Team name
-                                    <input
-                                      name="name"
-                                      defaultValue={team.name}
-                                      required
-                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                    />
-                                  </label>
-                                  <label className="block text-sm text-slate-700">
-                                    Division
-                                    <select
-                                      name="division_id"
-                                      defaultValue={team.division_id ?? ""}
-                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                    >
-                                      <option value="">Unassigned</option>
-                                      {divisions.map((d) => (
-                                        <option key={d.id} value={d.id}>
-                                          {d.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </label>
-                                  <label className="block text-sm text-slate-700">
-                                    Status
-                                    <select
-                                      name="registration_status"
-                                      defaultValue={team.registration_status}
-                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                    >
-                                      <option value="pending">Pending</option>
-                                      <option value="registered">
-                                        Registered
-                                      </option>
-                                    </select>
-                                  </label>
+                                  <input
+                                    name="name"
+                                    defaultValue={c.name}
+                                    aria-label="Contact name"
+                                    placeholder="Name"
+                                    required
+                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <input
+                                    name="role"
+                                    defaultValue={c.role ?? ""}
+                                    aria-label="Contact role"
+                                    placeholder="Role"
+                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <input
+                                    name="phone"
+                                    defaultValue={c.phone ?? ""}
+                                    aria-label="Contact phone"
+                                    placeholder="Phone"
+                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
+                                  <input
+                                    name="email"
+                                    defaultValue={c.email ?? ""}
+                                    aria-label="Contact email"
+                                    placeholder="Email"
+                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                  />
                                   <button
                                     type="submit"
-                                    className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                                    className="col-span-4 justify-self-start text-xs text-blue-600 hover:underline"
                                   >
                                     Save
                                   </button>
                                 </form>
                                 <form
-                                  action={deleteTeam.bind(null, team.id)}
-                                  className="flex items-start"
+                                  action={deleteTeamContact.bind(
+                                    null,
+                                    c.id,
+                                  )}
                                 >
                                   <ConfirmSubmitButton
-                                    confirmText={`Delete ${team.name}? This can't be undone.`}
-                                    className="text-sm text-red-600 hover:underline"
+                                    confirmText={`Delete contact ${c.name}?`}
+                                    className="text-xs text-red-600 hover:underline"
                                   >
-                                    Delete Team
+                                    Delete
                                   </ConfirmSubmitButton>
                                 </form>
-
-                                <div className="col-span-2 space-y-3 border-t border-slate-100 pt-3">
-                                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                    Contacts
-                                  </p>
-                                  {contacts.map((c) => (
-                                    <div
-                                      key={c.id}
-                                      className="flex items-end gap-2"
-                                    >
-                                      <form
-                                        action={updateTeamContact.bind(
-                                          null,
-                                          c.id,
-                                        )}
-                                        className="grid flex-1 grid-cols-4 gap-2"
-                                      >
-                                        <input
-                                          name="name"
-                                          defaultValue={c.name}
-                                          aria-label="Contact name"
-                                          placeholder="Name"
-                                          required
-                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                        />
-                                        <input
-                                          name="role"
-                                          defaultValue={c.role ?? ""}
-                                          aria-label="Contact role"
-                                          placeholder="Role"
-                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                        />
-                                        <input
-                                          name="phone"
-                                          defaultValue={c.phone ?? ""}
-                                          aria-label="Contact phone"
-                                          placeholder="Phone"
-                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                        />
-                                        <input
-                                          name="email"
-                                          defaultValue={c.email ?? ""}
-                                          aria-label="Contact email"
-                                          placeholder="Email"
-                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                        />
-                                        <button
-                                          type="submit"
-                                          className="col-span-4 justify-self-start text-xs text-blue-600 hover:underline"
-                                        >
-                                          Save
-                                        </button>
-                                      </form>
-                                      <form
-                                        action={deleteTeamContact.bind(
-                                          null,
-                                          c.id,
-                                        )}
-                                      >
-                                        <ConfirmSubmitButton
-                                          confirmText={`Delete contact ${c.name}?`}
-                                          className="text-xs text-red-600 hover:underline"
-                                        >
-                                          Delete
-                                        </ConfirmSubmitButton>
-                                      </form>
-                                    </div>
-                                  ))}
-                                  <form
-                                    action={addTeamContact.bind(
-                                      null,
-                                      team.id,
-                                    )}
-                                    className="grid grid-cols-5 items-end gap-2"
-                                  >
-                                    <input
-                                      name="name"
-                                      aria-label="New contact name"
-                                      placeholder="Name"
-                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                    />
-                                    <input
-                                      name="role"
-                                      aria-label="New contact role"
-                                      placeholder="Role"
-                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                    />
-                                    <input
-                                      name="phone"
-                                      aria-label="New contact phone"
-                                      placeholder="Phone"
-                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                    />
-                                    <input
-                                      name="email"
-                                      aria-label="New contact email"
-                                      placeholder="Email"
-                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                    />
-                                    <button
-                                      type="submit"
-                                      className="text-xs text-blue-600 hover:underline"
-                                    >
-                                      + Add contact
-                                    </button>
-                                  </form>
-                                </div>
                               </div>
-                            </CollapsibleDetails>
-                          </td>
-                        </tr>
+                            ))}
+                            <form
+                              action={addTeamContact.bind(null, team.id)}
+                              className="grid grid-cols-5 items-end gap-2"
+                            >
+                              <input
+                                name="name"
+                                aria-label="New contact name"
+                                placeholder="Name"
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                              />
+                              <input
+                                name="role"
+                                aria-label="New contact role"
+                                placeholder="Role"
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                              />
+                              <input
+                                name="phone"
+                                aria-label="New contact phone"
+                                placeholder="Phone"
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                              />
+                              <input
+                                name="email"
+                                aria-label="New contact email"
+                                placeholder="Email"
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                              />
+                              <button
+                                type="submit"
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                + Add contact
+                              </button>
+                            </form>
+                          </div>
+                        </div>
                       )}
-                    </Fragment>
+                    </CollapsibleDetails>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           ) : (
             <p className="px-5 py-6 text-center text-sm text-slate-500">
               No teams yet.
