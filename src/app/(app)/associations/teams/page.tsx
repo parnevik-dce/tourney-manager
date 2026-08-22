@@ -67,6 +67,104 @@ export default async function TeamsListPage() {
         </p>
       )}
 
+      {isDirector && tournament && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
+          <CollapsibleDetails
+            summary="+ Add Team"
+            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+          >
+            <form action={createTeam} className="mt-4 grid grid-cols-2 gap-3">
+              <label className="col-span-2 text-sm text-slate-700">
+                Association
+                <select
+                  name="association_id"
+                  required
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="">Select association…</option>
+                  {associations.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="col-span-2 text-sm text-slate-700">
+                Team name
+                <input
+                  name="name"
+                  required
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Division
+                <select
+                  name="division_id"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="">Unassigned</option>
+                  {divisions.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm text-slate-700">
+                Status
+                <select
+                  name="registration_status"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="registered">Registered</option>
+                </select>
+              </label>
+              <p className="col-span-2 text-xs text-slate-400">
+                Team contact — leave blank to use the association&apos;s
+                contact
+              </p>
+              <label className="text-sm text-slate-700">
+                Name
+                <input
+                  name="contact_name"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Role
+                <input
+                  name="contact_role"
+                  placeholder="Manager, Coach"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Phone
+                <input
+                  name="contact_phone"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Email
+                <input
+                  name="contact_email"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Add team
+              </button>
+            </form>
+          </CollapsibleDetails>
+        </div>
+      )}
+
       {tournament && (
         <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
           {teams.length ? (
@@ -289,104 +387,6 @@ export default async function TeamsListPage() {
               No teams yet.
             </p>
           )}
-        </div>
-      )}
-
-      {isDirector && tournament && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <CollapsibleDetails
-            summary="+ Add Team"
-            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
-          >
-            <form action={createTeam} className="mt-4 grid grid-cols-2 gap-3">
-              <label className="col-span-2 text-sm text-slate-700">
-                Association
-                <select
-                  name="association_id"
-                  required
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                >
-                  <option value="">Select association…</option>
-                  {associations.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="col-span-2 text-sm text-slate-700">
-                Team name
-                <input
-                  name="name"
-                  required
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Division
-                <select
-                  name="division_id"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                >
-                  <option value="">Unassigned</option>
-                  {divisions.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm text-slate-700">
-                Status
-                <select
-                  name="registration_status"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="registered">Registered</option>
-                </select>
-              </label>
-              <p className="col-span-2 text-xs text-slate-400">
-                Team contact — leave blank to use the association&apos;s
-                contact
-              </p>
-              <label className="text-sm text-slate-700">
-                Name
-                <input
-                  name="contact_name"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Role
-                <input
-                  name="contact_role"
-                  placeholder="Manager, Coach"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Phone
-                <input
-                  name="contact_phone"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Email
-                <input
-                  name="contact_email"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <button
-                type="submit"
-                className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-              >
-                Add team
-              </button>
-            </form>
-          </CollapsibleDetails>
         </div>
       )}
     </div>

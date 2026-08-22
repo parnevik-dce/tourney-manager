@@ -125,6 +125,81 @@ export default async function ContactsPage({
         </p>
       )}
 
+      {isDirector && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
+          <CollapsibleDetails
+            summary="+ Add Contact"
+            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+          >
+            <form
+              action={createContact}
+              className="mt-4 grid grid-cols-2 gap-3"
+            >
+              <label className="col-span-2 text-sm text-slate-700">
+                Belongs to
+                <select
+                  name="target"
+                  required
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="">Select association or team…</option>
+                  <optgroup label="Associations">
+                    {(associations ?? []).map((a) => (
+                      <option key={a.id} value={`association:${a.id}`}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Teams">
+                    {teamOptions.map((t) => (
+                      <option key={t.id} value={`team:${t.id}`}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </label>
+              <label className="text-sm text-slate-700">
+                Name
+                <input
+                  name="name"
+                  required
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Role
+                <input
+                  name="role"
+                  placeholder="President, Manager, Coach"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Phone
+                <input
+                  name="phone"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Email
+                <input
+                  name="email"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Add contact
+              </button>
+            </form>
+          </CollapsibleDetails>
+        </div>
+      )}
+
       <ContactsFilterBar
         associations={associations ?? []}
         association={associationFilter}
@@ -254,81 +329,6 @@ export default async function ContactsPage({
           </p>
         )}
       </div>
-
-      {isDirector && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <CollapsibleDetails
-            summary="+ Add Contact"
-            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
-          >
-            <form
-              action={createContact}
-              className="mt-4 grid grid-cols-2 gap-3"
-            >
-              <label className="col-span-2 text-sm text-slate-700">
-                Belongs to
-                <select
-                  name="target"
-                  required
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                >
-                  <option value="">Select association or team…</option>
-                  <optgroup label="Associations">
-                    {(associations ?? []).map((a) => (
-                      <option key={a.id} value={`association:${a.id}`}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Teams">
-                    {teamOptions.map((t) => (
-                      <option key={t.id} value={`team:${t.id}`}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              </label>
-              <label className="text-sm text-slate-700">
-                Name
-                <input
-                  name="name"
-                  required
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Role
-                <input
-                  name="role"
-                  placeholder="President, Manager, Coach"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Phone
-                <input
-                  name="phone"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Email
-                <input
-                  name="email"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <button
-                type="submit"
-                className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-              >
-                Add contact
-              </button>
-            </form>
-          </CollapsibleDetails>
-        </div>
-      )}
     </div>
   );
 }
