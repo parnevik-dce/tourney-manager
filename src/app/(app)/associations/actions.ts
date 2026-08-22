@@ -79,6 +79,7 @@ export async function updateAssociationContact(
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/contacts");
 }
 
 export async function addAssociationContact(
@@ -103,6 +104,34 @@ export async function addAssociationContact(
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/contacts");
+}
+
+export async function createContact(formData: FormData) {
+  const supabase = await createClient();
+  const target = String(formData.get("target") || "");
+  const [scope, targetId] = target.split(":");
+  const name = String(formData.get("name") ?? "");
+  const role = String(formData.get("role") || "") || null;
+  const phone = String(formData.get("phone") || "") || null;
+  const email = String(formData.get("email") || "") || null;
+  if (!name.trim() || !targetId) return;
+
+  const table = scope === "team" ? "team_contacts" : "association_contacts";
+  const idField = scope === "team" ? "team_id" : "association_id";
+
+  const { error } = await supabase.from(table).insert({
+    [idField]: targetId,
+    name,
+    role,
+    phone,
+    email,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations");
+  revalidatePath("/associations/contacts");
 }
 
 export async function createTeam(formData: FormData) {
@@ -202,6 +231,7 @@ export async function updateTeamContact(
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/contacts");
 }
 
 export async function addTeamContact(teamId: string, formData: FormData) {
@@ -223,6 +253,7 @@ export async function addTeamContact(teamId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/contacts");
 }
 
 export async function uploadRoster(teamId: string, formData: FormData) {
@@ -262,6 +293,7 @@ export async function deleteAssociationContact(contactId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/contacts");
 }
 
 export async function deleteTeamContact(contactId: string) {
@@ -274,6 +306,7 @@ export async function deleteTeamContact(contactId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/contacts");
 }
 
 export async function deleteAssociation(associationId: string) {
