@@ -53,6 +53,115 @@ export default async function AssociationsListPage({
         </p>
       )}
 
+      {isDirector && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
+          <CollapsibleDetails
+            summary="+ Add Association"
+            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+          >
+            <form
+              action={createAssociation}
+              className="mt-4 grid grid-cols-2 gap-3"
+            >
+              <label className="col-span-2 text-sm text-slate-700">
+                Association name
+                <input
+                  name="name"
+                  required
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="col-span-2 text-sm text-slate-700">
+                Mascot
+                <input
+                  name="mascot"
+                  placeholder="Rebels"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Contact name
+                <input
+                  name="contact_name"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Contact role
+                <input
+                  name="contact_role"
+                  placeholder="President, Registrar"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Contact phone
+                <input
+                  name="contact_phone"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="col-span-2 text-sm text-slate-700">
+                Contact email
+                <input
+                  name="contact_email"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Add association
+              </button>
+            </form>
+          </CollapsibleDetails>
+        </div>
+      )}
+
+      {isDirector && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white px-5 py-4">
+          <CollapsibleDetails
+            summary="+ Import Associations CSV"
+            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+          >
+            <p className="mt-3 text-sm text-slate-600">
+              Bulk-import associations with their key contacts. Header row,
+              in this order:
+            </p>
+            <div className="mt-2 overflow-x-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+              association_name,president_name,president_email,boys_director_name,boys_director_email,treasurer_name,treasurer_email
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              <code className="rounded bg-slate-100 px-1 py-0.5">
+                association_name
+              </code>{" "}
+              is required — rows without it are skipped. Every contact
+              field is optional; leave blank if an association doesn&apos;t
+              have that contact.
+            </p>
+            <form
+              action={importAssociationsCsv}
+              className="mt-4 flex items-center gap-2"
+            >
+              <input
+                name="csv_file"
+                type="file"
+                accept=".csv,text/csv"
+                required
+                className="block text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Import
+              </button>
+            </form>
+          </CollapsibleDetails>
+        </div>
+      )}
+
       <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         {associations?.length ? (
           <div className="min-w-[640px] text-sm">
@@ -258,115 +367,6 @@ export default async function AssociationsListPage({
           </p>
         )}
       </div>
-
-      {isDirector && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <CollapsibleDetails
-            summary="+ Add Association"
-            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
-          >
-            <form
-              action={createAssociation}
-              className="mt-4 grid grid-cols-2 gap-3"
-            >
-              <label className="col-span-2 text-sm text-slate-700">
-                Association name
-                <input
-                  name="name"
-                  required
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="col-span-2 text-sm text-slate-700">
-                Mascot
-                <input
-                  name="mascot"
-                  placeholder="Rebels"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Contact name
-                <input
-                  name="contact_name"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Contact role
-                <input
-                  name="contact_role"
-                  placeholder="President, Registrar"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Contact phone
-                <input
-                  name="contact_phone"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <label className="col-span-2 text-sm text-slate-700">
-                Contact email
-                <input
-                  name="contact_email"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                />
-              </label>
-              <button
-                type="submit"
-                className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-              >
-                Add association
-              </button>
-            </form>
-          </CollapsibleDetails>
-        </div>
-      )}
-
-      {isDirector && (
-        <div className="mt-4 rounded-lg border border-slate-200 bg-white px-5 py-4">
-          <CollapsibleDetails
-            summary="+ Import Associations CSV"
-            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
-          >
-            <p className="mt-3 text-sm text-slate-600">
-              Bulk-import associations with their key contacts. Header row,
-              in this order:
-            </p>
-            <div className="mt-2 overflow-x-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-              association_name,president_name,president_email,boys_director_name,boys_director_email,treasurer_name,treasurer_email
-            </div>
-            <p className="mt-2 text-xs text-slate-400">
-              <code className="rounded bg-slate-100 px-1 py-0.5">
-                association_name
-              </code>{" "}
-              is required — rows without it are skipped. Every contact
-              field is optional; leave blank if an association doesn&apos;t
-              have that contact.
-            </p>
-            <form
-              action={importAssociationsCsv}
-              className="mt-4 flex items-center gap-2"
-            >
-              <input
-                name="csv_file"
-                type="file"
-                accept=".csv,text/csv"
-                required
-                className="block text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
-              />
-              <button
-                type="submit"
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-              >
-                Import
-              </button>
-            </form>
-          </CollapsibleDetails>
-        </div>
-      )}
     </div>
   );
 }
