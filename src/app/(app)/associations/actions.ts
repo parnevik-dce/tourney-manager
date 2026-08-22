@@ -40,6 +40,7 @@ export async function createAssociation(formData: FormData) {
   }
 
   revalidatePath("/associations");
+  revalidatePath("/associations/list");
 }
 
 export async function updateAssociation(
@@ -177,6 +178,7 @@ export async function createTeam(formData: FormData) {
   }
 
   revalidatePath("/associations");
+  revalidatePath("/associations/teams");
 }
 
 export async function updateTeam(teamId: string, formData: FormData) {

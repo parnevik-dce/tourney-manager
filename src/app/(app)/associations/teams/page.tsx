@@ -2,10 +2,25 @@ import { Fragment } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
-import { updateTeam, deleteTeam } from "../actions";
+import {
+  createTeam,
+  updateTeam,
+  deleteTeam,
+  updateTeamContact,
+  addTeamContact,
+  deleteTeamContact,
+} from "../actions";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
+
+type Contact = {
+  id: string;
+  name: string;
+  role: string | null;
+  phone: string | null;
+  email: string | null;
+};
 
 export default async function TeamsListPage() {
   const supabase = await createClient();
@@ -13,23 +28,28 @@ export default async function TeamsListPage() {
   const tournament = await getCurrentTournament();
   const isDirector = profile?.role === "director";
 
-  const [{ data: rawTeams }, { data: rawDivisions }] = tournament
-    ? await Promise.all([
-        supabase
-          .from("teams")
-          .select("*, associations(name), divisions(name), waivers(id)")
-          .eq("tournament_id", tournament.id)
-          .order("name"),
-        supabase
-          .from("divisions")
-          .select("*")
-          .eq("tournament_id", tournament.id)
-          .order("sort_order"),
-      ])
-    : [{ data: null }, { data: null }];
+  const [{ data: rawTeams }, { data: rawDivisions }, { data: rawAssociations }] =
+    tournament
+      ? await Promise.all([
+          supabase
+            .from("teams")
+            .select(
+              "*, associations(name), divisions(name), waivers(id), team_contacts(*)",
+            )
+            .eq("tournament_id", tournament.id)
+            .order("name"),
+          supabase
+            .from("divisions")
+            .select("*")
+            .eq("tournament_id", tournament.id)
+            .order("sort_order"),
+          supabase.from("associations").select("id, name").order("name"),
+        ])
+      : [{ data: null }, { data: null }, { data: null }];
 
   const teams = rawTeams ?? [];
   const divisions = rawDivisions ?? [];
+  const associations = rawAssociations ?? [];
 
   return (
     <div className="flex-1 px-8 py-8">
@@ -62,102 +82,212 @@ export default async function TeamsListPage() {
                 </tr>
               </thead>
               <tbody>
-                {teams.map((team) => (
-                  <Fragment key={team.id}>
-                    <tr className="border-b border-slate-50 last:border-0">
-                      <td className="px-5 py-3 font-medium text-slate-900">
-                        {team.name}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {team.associations?.name ?? "—"}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {team.divisions?.name ?? "—"}
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className="capitalize text-slate-700">
-                          {team.registration_status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {team.waivers?.length ?? 0}
-                      </td>
-                    </tr>
-                    {isDirector && (
+                {teams.map((team) => {
+                  const contacts: Contact[] = team.team_contacts ?? [];
+                  return (
+                    <Fragment key={team.id}>
                       <tr className="border-b border-slate-50 last:border-0">
-                        <td colSpan={5} className="px-5 pb-3">
-                          <CollapsibleDetails
-                            summary="Edit"
-                            summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
-                          >
-                            <div className="mt-3 grid grid-cols-2 gap-4">
-                              <form
-                                key={`${team.name}-${team.division_id}-${team.registration_status}`}
-                                action={updateTeam.bind(null, team.id)}
-                                className="space-y-2"
-                              >
-                                <label className="block text-sm text-slate-700">
-                                  Team name
-                                  <input
-                                    name="name"
-                                    defaultValue={team.name}
-                                    required
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                  />
-                                </label>
-                                <label className="block text-sm text-slate-700">
-                                  Division
-                                  <select
-                                    name="division_id"
-                                    defaultValue={team.division_id ?? ""}
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                  >
-                                    <option value="">Unassigned</option>
-                                    {divisions.map((d) => (
-                                      <option key={d.id} value={d.id}>
-                                        {d.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </label>
-                                <label className="block text-sm text-slate-700">
-                                  Status
-                                  <select
-                                    name="registration_status"
-                                    defaultValue={team.registration_status}
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                  >
-                                    <option value="pending">Pending</option>
-                                    <option value="registered">
-                                      Registered
-                                    </option>
-                                  </select>
-                                </label>
-                                <button
-                                  type="submit"
-                                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                                >
-                                  Save
-                                </button>
-                              </form>
-                              <form
-                                action={deleteTeam.bind(null, team.id)}
-                                className="flex items-start"
-                              >
-                                <ConfirmSubmitButton
-                                  confirmText={`Delete ${team.name}? This can't be undone.`}
-                                  className="text-sm text-red-600 hover:underline"
-                                >
-                                  Delete Team
-                                </ConfirmSubmitButton>
-                              </form>
-                            </div>
-                          </CollapsibleDetails>
+                        <td className="px-5 py-3 font-medium text-slate-900">
+                          {team.name}
+                        </td>
+                        <td className="px-5 py-3 text-slate-500">
+                          {team.associations?.name ?? "—"}
+                        </td>
+                        <td className="px-5 py-3 text-slate-500">
+                          {team.divisions?.name ?? "—"}
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className="capitalize text-slate-700">
+                            {team.registration_status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-slate-500">
+                          {team.waivers?.length ?? 0}
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                ))}
+                      {isDirector && (
+                        <tr className="border-b border-slate-50 last:border-0">
+                          <td colSpan={5} className="px-5 pb-3">
+                            <CollapsibleDetails
+                              summary="Edit"
+                              summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
+                            >
+                              <div className="mt-3 grid grid-cols-2 gap-4">
+                                <form
+                                  key={`${team.name}-${team.division_id}-${team.registration_status}`}
+                                  action={updateTeam.bind(null, team.id)}
+                                  className="space-y-2"
+                                >
+                                  <label className="block text-sm text-slate-700">
+                                    Team name
+                                    <input
+                                      name="name"
+                                      defaultValue={team.name}
+                                      required
+                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                    />
+                                  </label>
+                                  <label className="block text-sm text-slate-700">
+                                    Division
+                                    <select
+                                      name="division_id"
+                                      defaultValue={team.division_id ?? ""}
+                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                    >
+                                      <option value="">Unassigned</option>
+                                      {divisions.map((d) => (
+                                        <option key={d.id} value={d.id}>
+                                          {d.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                  <label className="block text-sm text-slate-700">
+                                    Status
+                                    <select
+                                      name="registration_status"
+                                      defaultValue={team.registration_status}
+                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                    >
+                                      <option value="pending">Pending</option>
+                                      <option value="registered">
+                                        Registered
+                                      </option>
+                                    </select>
+                                  </label>
+                                  <button
+                                    type="submit"
+                                    className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                                  >
+                                    Save
+                                  </button>
+                                </form>
+                                <form
+                                  action={deleteTeam.bind(null, team.id)}
+                                  className="flex items-start"
+                                >
+                                  <ConfirmSubmitButton
+                                    confirmText={`Delete ${team.name}? This can't be undone.`}
+                                    className="text-sm text-red-600 hover:underline"
+                                  >
+                                    Delete Team
+                                  </ConfirmSubmitButton>
+                                </form>
+
+                                <div className="col-span-2 space-y-3 border-t border-slate-100 pt-3">
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                    Contacts
+                                  </p>
+                                  {contacts.map((c) => (
+                                    <div
+                                      key={c.id}
+                                      className="flex items-end gap-2"
+                                    >
+                                      <form
+                                        action={updateTeamContact.bind(
+                                          null,
+                                          c.id,
+                                        )}
+                                        className="grid flex-1 grid-cols-4 gap-2"
+                                      >
+                                        <input
+                                          name="name"
+                                          defaultValue={c.name}
+                                          aria-label="Contact name"
+                                          placeholder="Name"
+                                          required
+                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                        />
+                                        <input
+                                          name="role"
+                                          defaultValue={c.role ?? ""}
+                                          aria-label="Contact role"
+                                          placeholder="Role"
+                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                        />
+                                        <input
+                                          name="phone"
+                                          defaultValue={c.phone ?? ""}
+                                          aria-label="Contact phone"
+                                          placeholder="Phone"
+                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                        />
+                                        <input
+                                          name="email"
+                                          defaultValue={c.email ?? ""}
+                                          aria-label="Contact email"
+                                          placeholder="Email"
+                                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                        />
+                                        <button
+                                          type="submit"
+                                          className="col-span-4 justify-self-start text-xs text-blue-600 hover:underline"
+                                        >
+                                          Save
+                                        </button>
+                                      </form>
+                                      <form
+                                        action={deleteTeamContact.bind(
+                                          null,
+                                          c.id,
+                                        )}
+                                      >
+                                        <ConfirmSubmitButton
+                                          confirmText={`Delete contact ${c.name}?`}
+                                          className="text-xs text-red-600 hover:underline"
+                                        >
+                                          Delete
+                                        </ConfirmSubmitButton>
+                                      </form>
+                                    </div>
+                                  ))}
+                                  <form
+                                    action={addTeamContact.bind(
+                                      null,
+                                      team.id,
+                                    )}
+                                    className="grid grid-cols-5 items-end gap-2"
+                                  >
+                                    <input
+                                      name="name"
+                                      aria-label="New contact name"
+                                      placeholder="Name"
+                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                    />
+                                    <input
+                                      name="role"
+                                      aria-label="New contact role"
+                                      placeholder="Role"
+                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                    />
+                                    <input
+                                      name="phone"
+                                      aria-label="New contact phone"
+                                      placeholder="Phone"
+                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                    />
+                                    <input
+                                      name="email"
+                                      aria-label="New contact email"
+                                      placeholder="Email"
+                                      className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                    />
+                                    <button
+                                      type="submit"
+                                      className="text-xs text-blue-600 hover:underline"
+                                    >
+                                      + Add contact
+                                    </button>
+                                  </form>
+                                </div>
+                              </div>
+                            </CollapsibleDetails>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           ) : (
@@ -165,6 +295,104 @@ export default async function TeamsListPage() {
               No teams yet.
             </p>
           )}
+        </div>
+      )}
+
+      {isDirector && tournament && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
+          <CollapsibleDetails
+            summary="+ Add Team"
+            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+          >
+            <form action={createTeam} className="mt-4 grid grid-cols-2 gap-3">
+              <label className="col-span-2 text-sm text-slate-700">
+                Association
+                <select
+                  name="association_id"
+                  required
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="">Select association…</option>
+                  {associations.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="col-span-2 text-sm text-slate-700">
+                Team name
+                <input
+                  name="name"
+                  required
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Division
+                <select
+                  name="division_id"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="">Unassigned</option>
+                  {divisions.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm text-slate-700">
+                Status
+                <select
+                  name="registration_status"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="registered">Registered</option>
+                </select>
+              </label>
+              <p className="col-span-2 text-xs text-slate-400">
+                Team contact — leave blank to use the association&apos;s
+                contact
+              </p>
+              <label className="text-sm text-slate-700">
+                Name
+                <input
+                  name="contact_name"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Role
+                <input
+                  name="contact_role"
+                  placeholder="Manager, Coach"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Phone
+                <input
+                  name="contact_phone"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <label className="text-sm text-slate-700">
+                Email
+                <input
+                  name="contact_email"
+                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Add team
+              </button>
+            </form>
+          </CollapsibleDetails>
         </div>
       )}
     </div>
