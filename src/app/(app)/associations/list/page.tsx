@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import {
@@ -56,216 +55,203 @@ export default async function AssociationsListPage({
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         {associations?.length ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-5 py-2 font-medium">Association</th>
-                <th className="px-5 py-2 font-medium">Mascot</th>
-                <th className="px-5 py-2 font-medium">Primary Contact</th>
-                <th className="px-5 py-2 font-medium">Teams</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div className="min-w-[640px] text-sm">
+            <div className="grid grid-cols-[2fr_1fr_2fr_1fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
+              <span>Association</span>
+              <span>Mascot</span>
+              <span>Primary Contact</span>
+              <span>Teams</span>
+              <span />
+            </div>
+            <div className="divide-y divide-slate-50">
               {associations.map((assoc) => {
                 const contacts: Contact[] = assoc.association_contacts ?? [];
                 const primaryContact = contacts[0];
                 const teamCount = assoc.teams?.length ?? 0;
                 return (
-                  <Fragment key={assoc.id}>
-                    <tr className="border-b border-slate-50 last:border-0">
-                      <td className="px-5 py-3 font-medium text-slate-900">
-                        {assoc.name}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {assoc.mascot ?? "—"}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {primaryContact ? (
-                          <>
-                            {primaryContact.name}
-                            {primaryContact.email &&
-                              ` · ${primaryContact.email}`}
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {teamCount}
-                      </td>
-                    </tr>
-                    {isDirector && (
-                      <tr className="border-b border-slate-50 last:border-0">
-                        <td colSpan={4} className="px-5 pb-3">
-                          <CollapsibleDetails
-                            summary="Edit"
-                            summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
+                  <CollapsibleDetails
+                    key={assoc.id}
+                    summaryClassName="grid grid-cols-[2fr_1fr_2fr_1fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                    summary={
+                      <>
+                        <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
+                          {assoc.name}
+                        </span>
+                        <span className="text-slate-500">
+                          {assoc.mascot ?? "—"}
+                        </span>
+                        <span className="text-slate-500">
+                          {primaryContact ? (
+                            <>
+                              {primaryContact.name}
+                              {primaryContact.email &&
+                                ` · ${primaryContact.email}`}
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </span>
+                        <span className="text-slate-500">{teamCount}</span>
+                        {isDirector ? (
+                          <form
+                            action={deleteAssociation.bind(null, assoc.id)}
                           >
-                            <div className="mt-3 grid grid-cols-2 gap-4">
+                            <ConfirmSubmitButton
+                              confirmText={`Delete ${assoc.name}? This can't be undone.`}
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              Delete
+                            </ConfirmSubmitButton>
+                          </form>
+                        ) : (
+                          <span />
+                        )}
+                      </>
+                    }
+                  >
+                    {isDirector && (
+                      <div className="grid grid-cols-2 gap-4 border-t border-slate-100 px-5 py-4">
+                        <form
+                          key={`${assoc.name}-${assoc.mascot}`}
+                          action={updateAssociation.bind(null, assoc.id)}
+                          className="space-y-2"
+                        >
+                          <label className="block text-sm text-slate-700">
+                            Association name
+                            <input
+                              name="name"
+                              defaultValue={assoc.name}
+                              required
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <label className="block text-sm text-slate-700">
+                            Mascot
+                            <input
+                              name="mascot"
+                              defaultValue={assoc.mascot ?? ""}
+                              placeholder="Rebels"
+                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                          >
+                            Save
+                          </button>
+                        </form>
+
+                        <div className="col-span-2 space-y-3 border-t border-slate-100 pt-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            Contacts
+                          </p>
+                          {contacts.map((c) => (
+                            <div key={c.id} className="flex items-end gap-2">
                               <form
-                                key={`${assoc.name}-${assoc.mascot}`}
-                                action={updateAssociation.bind(
+                                action={updateAssociationContact.bind(
                                   null,
-                                  assoc.id,
+                                  c.id,
                                 )}
-                                className="space-y-2"
+                                className="grid flex-1 grid-cols-4 gap-2"
                               >
-                                <label className="block text-sm text-slate-700">
-                                  Association name
-                                  <input
-                                    name="name"
-                                    defaultValue={assoc.name}
-                                    required
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                  />
-                                </label>
-                                <label className="block text-sm text-slate-700">
-                                  Mascot
-                                  <input
-                                    name="mascot"
-                                    defaultValue={assoc.mascot ?? ""}
-                                    placeholder="Rebels"
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                  />
-                                </label>
+                                <input
+                                  name="name"
+                                  defaultValue={c.name}
+                                  aria-label="Contact name"
+                                  placeholder="Name"
+                                  required
+                                  className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                />
+                                <input
+                                  name="role"
+                                  defaultValue={c.role ?? ""}
+                                  aria-label="Contact role"
+                                  placeholder="Role"
+                                  className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                />
+                                <input
+                                  name="phone"
+                                  defaultValue={c.phone ?? ""}
+                                  aria-label="Contact phone"
+                                  placeholder="Phone"
+                                  className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                />
+                                <input
+                                  name="email"
+                                  defaultValue={c.email ?? ""}
+                                  aria-label="Contact email"
+                                  placeholder="Email"
+                                  className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                />
                                 <button
                                   type="submit"
-                                  className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                                  className="col-span-4 justify-self-start text-xs text-blue-600 hover:underline"
                                 >
                                   Save
                                 </button>
                               </form>
                               <form
-                                action={deleteAssociation.bind(
+                                action={deleteAssociationContact.bind(
                                   null,
-                                  assoc.id,
+                                  c.id,
                                 )}
-                                className="flex items-start"
                               >
                                 <ConfirmSubmitButton
-                                  confirmText={`Delete ${assoc.name}? This can't be undone.`}
-                                  className="text-sm text-red-600 hover:underline"
+                                  confirmText={`Delete contact ${c.name}?`}
+                                  className="text-xs text-red-600 hover:underline"
                                 >
-                                  Delete Association
+                                  Delete
                                 </ConfirmSubmitButton>
                               </form>
-
-                              <div className="col-span-2 space-y-3 border-t border-slate-100 pt-3">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                  Contacts
-                                </p>
-                                {contacts.map((c) => (
-                                  <div
-                                    key={c.id}
-                                    className="flex items-end gap-2"
-                                  >
-                                    <form
-                                      action={updateAssociationContact.bind(
-                                        null,
-                                        c.id,
-                                      )}
-                                      className="grid flex-1 grid-cols-4 gap-2"
-                                    >
-                                      <input
-                                        name="name"
-                                        defaultValue={c.name}
-                                        aria-label="Contact name"
-                                        placeholder="Name"
-                                        required
-                                        className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                      />
-                                      <input
-                                        name="role"
-                                        defaultValue={c.role ?? ""}
-                                        aria-label="Contact role"
-                                        placeholder="Role"
-                                        className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                      />
-                                      <input
-                                        name="phone"
-                                        defaultValue={c.phone ?? ""}
-                                        aria-label="Contact phone"
-                                        placeholder="Phone"
-                                        className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                      />
-                                      <input
-                                        name="email"
-                                        defaultValue={c.email ?? ""}
-                                        aria-label="Contact email"
-                                        placeholder="Email"
-                                        className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                      />
-                                      <button
-                                        type="submit"
-                                        className="col-span-4 justify-self-start text-xs text-blue-600 hover:underline"
-                                      >
-                                        Save
-                                      </button>
-                                    </form>
-                                    <form
-                                      action={deleteAssociationContact.bind(
-                                        null,
-                                        c.id,
-                                      )}
-                                    >
-                                      <ConfirmSubmitButton
-                                        confirmText={`Delete contact ${c.name}?`}
-                                        className="text-xs text-red-600 hover:underline"
-                                      >
-                                        Delete
-                                      </ConfirmSubmitButton>
-                                    </form>
-                                  </div>
-                                ))}
-                                <form
-                                  action={addAssociationContact.bind(
-                                    null,
-                                    assoc.id,
-                                  )}
-                                  className="grid grid-cols-5 items-end gap-2"
-                                >
-                                  <input
-                                    name="name"
-                                    aria-label="New contact name"
-                                    placeholder="Name"
-                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <input
-                                    name="role"
-                                    aria-label="New contact role"
-                                    placeholder="Role"
-                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <input
-                                    name="phone"
-                                    aria-label="New contact phone"
-                                    placeholder="Phone"
-                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <input
-                                    name="email"
-                                    aria-label="New contact email"
-                                    placeholder="Email"
-                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <button
-                                    type="submit"
-                                    className="text-xs text-blue-600 hover:underline"
-                                  >
-                                    + Add contact
-                                  </button>
-                                </form>
-                              </div>
                             </div>
-                          </CollapsibleDetails>
-                        </td>
-                      </tr>
+                          ))}
+                          <form
+                            action={addAssociationContact.bind(
+                              null,
+                              assoc.id,
+                            )}
+                            className="grid grid-cols-5 items-end gap-2"
+                          >
+                            <input
+                              name="name"
+                              aria-label="New contact name"
+                              placeholder="Name"
+                              className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                            />
+                            <input
+                              name="role"
+                              aria-label="New contact role"
+                              placeholder="Role"
+                              className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                            />
+                            <input
+                              name="phone"
+                              aria-label="New contact phone"
+                              placeholder="Phone"
+                              className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                            />
+                            <input
+                              name="email"
+                              aria-label="New contact email"
+                              placeholder="Email"
+                              className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                            />
+                            <button
+                              type="submit"
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              + Add contact
+                            </button>
+                          </form>
+                        </div>
+                      </div>
                     )}
-                  </Fragment>
+                  </CollapsibleDetails>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          </div>
         ) : (
           <p className="px-5 py-6 text-center text-sm text-slate-500">
             No associations yet.
