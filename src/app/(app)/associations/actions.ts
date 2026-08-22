@@ -167,6 +167,7 @@ export async function updateTeam(teamId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/teams");
 }
 
 export async function updateTeamStatus(teamId: string, formData: FormData) {
@@ -323,4 +324,5 @@ export async function deleteTeam(teamId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/teams");
 }
