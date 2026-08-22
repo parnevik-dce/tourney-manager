@@ -34,7 +34,7 @@ export default async function TeamsListPage() {
           supabase
             .from("teams")
             .select(
-              "*, associations(name), divisions(name), waivers(id), team_contacts(*)",
+              "*, associations(name), divisions(name), players(id), waivers(id), team_contacts(*)",
             )
             .eq("tournament_id", tournament.id)
             .order("name"),
@@ -78,6 +78,7 @@ export default async function TeamsListPage() {
                   <th className="px-5 py-2 font-medium">Association</th>
                   <th className="px-5 py-2 font-medium">Division</th>
                   <th className="px-5 py-2 font-medium">Status</th>
+                  <th className="px-5 py-2 font-medium">Players</th>
                   <th className="px-5 py-2 font-medium">Waivers</th>
                 </tr>
               </thead>
@@ -102,12 +103,15 @@ export default async function TeamsListPage() {
                           </span>
                         </td>
                         <td className="px-5 py-3 text-slate-500">
+                          {team.players?.length ?? 0}
+                        </td>
+                        <td className="px-5 py-3 text-slate-500">
                           {team.waivers?.length ?? 0}
                         </td>
                       </tr>
                       {isDirector && (
                         <tr className="border-b border-slate-50 last:border-0">
-                          <td colSpan={5} className="px-5 pb-3">
+                          <td colSpan={6} className="px-5 pb-3">
                             <CollapsibleDetails
                               summary="Edit"
                               summaryClassName="cursor-pointer text-xs font-medium text-blue-600"

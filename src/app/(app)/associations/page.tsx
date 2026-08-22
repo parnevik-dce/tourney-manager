@@ -1,36 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
-import {
-  createAssociation,
-  updateAssociation,
-  updateAssociationContact,
-  addAssociationContact,
-  deleteAssociationContact,
-  deleteAssociation,
-  createTeam,
-  updateTeam,
-  updateTeamStatus,
-  addTeamContact,
-  updateTeamContact,
-  deleteTeamContact,
-  deleteTeam,
-  uploadRoster,
-} from "./actions";
-import { StatusSelect } from "@/components/status-select";
-import { CollapsibleDetails } from "@/components/collapsible-details";
 import { TextLink } from "@/components/text-link";
-import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsFilterBar } from "@/components/associations-filter-bar";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
-
-type Waiver = {
-  id: string;
-  participant_first_name: string;
-  participant_last_name: string;
-  guardian_first_name: string | null;
-  guardian_last_name: string | null;
-};
 
 type Contact = {
   id: string;
@@ -44,22 +16,18 @@ export default async function AssociationsPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    error?: string;
     association?: string;
     division?: string;
     status?: string;
   }>;
 }) {
   const {
-    error: errorMessage,
     association: associationFilter = "",
     division: divisionFilter = "",
     status: statusFilter = "",
   } = await searchParams;
   const supabase = await createClient();
-  const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
-  const isDirector = profile?.role === "director";
 
   const { data: associations } = await supabase
     .from("associations")
@@ -71,7 +39,7 @@ export default async function AssociationsPage({
         supabase
           .from("teams")
           .select(
-            "*, team_contacts(*), divisions(name), waivers(id, participant_first_name, participant_last_name, guardian_first_name, guardian_last_name)",
+            "*, team_contacts(*), divisions(name), players(id), waivers(id)",
           )
           .eq("tournament_id", tournament.id)
           .order("name"),
@@ -127,16 +95,10 @@ export default async function AssociationsPage({
 
       <AssociationsSubNav />
 
-      {errorMessage && (
-        <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      )}
-
       {!tournament && (
         <p className="mt-6 text-sm text-amber-700">
-          No active tournament — create one in Tournaments before adding
-          teams.
+          No active tournament — create one in Tournaments to see teams
+          here.
         </p>
       )}
 
@@ -164,7 +126,6 @@ export default async function AssociationsPage({
 
       <div className="mt-6 space-y-4">
         {visibleAssociations.map(({ assoc, assocTeams }) => {
-          const primaryContact = assoc.association_contacts?.[0];
           const registeredCount = assocTeams.filter(
             (t) => t.registration_status === "registered",
           ).length;
@@ -196,6 +157,9 @@ export default async function AssociationsPage({
                       )}
                     </p>
                   ))}
+                  {!assoc.association_contacts?.length && (
+                    <p className="text-sm text-slate-400">No contacts yet.</p>
+                  )}
                 </div>
                 {tournament && (
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -203,170 +167,6 @@ export default async function AssociationsPage({
                   </span>
                 )}
               </div>
-
-              {isDirector && (
-                <CollapsibleDetails
-                  className="border-b border-slate-100 px-5 py-3"
-                  summary="Edit Association"
-                >
-                  <div className="mt-3 grid grid-cols-2 gap-4">
-                    <form
-                      action={updateAssociation.bind(null, assoc.id)}
-                      className="space-y-2"
-                    >
-                      <label className="block text-sm text-slate-700">
-                        Association name
-                        <input
-                          name="name"
-                          defaultValue={assoc.name}
-                          required
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                        />
-                      </label>
-                      <label className="block text-sm text-slate-700">
-                        Mascot
-                        <input
-                          name="mascot"
-                          defaultValue={assoc.mascot ?? ""}
-                          placeholder="Rebels"
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                        />
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="submit"
-                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                        >
-                          Save name
-                        </button>
-                      </div>
-                    </form>
-                    <form action={deleteAssociation.bind(null, assoc.id)}>
-                      <ConfirmSubmitButton
-                        confirmText={`Delete ${assoc.name}? This can't be undone.`}
-                        className="text-sm text-red-600 hover:underline"
-                      >
-                        Delete Association
-                      </ConfirmSubmitButton>
-                    </form>
-                    <div className="col-span-2 space-y-4">
-                      {assoc.association_contacts?.map((c: Contact) => (
-                        <div
-                          key={c.id}
-                          className="border-b border-slate-100 pb-4 last:border-0 last:pb-0"
-                        >
-                          <form
-                            action={updateAssociationContact.bind(null, c.id)}
-                            className="space-y-2"
-                          >
-                            <label className="block text-sm text-slate-700">
-                              Contact name
-                              <input
-                                name="name"
-                                defaultValue={c.name}
-                                required
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                              />
-                            </label>
-                            <label className="block text-sm text-slate-700">
-                              Contact role
-                              <input
-                                name="role"
-                                defaultValue={c.role ?? ""}
-                                placeholder="President, Registrar"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                              />
-                            </label>
-                            <label className="block text-sm text-slate-700">
-                              Contact phone
-                              <input
-                                name="phone"
-                                defaultValue={c.phone ?? ""}
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                              />
-                            </label>
-                            <label className="block text-sm text-slate-700">
-                              Contact email
-                              <input
-                                name="email"
-                                defaultValue={c.email ?? ""}
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                              />
-                            </label>
-                            <div className="flex items-center gap-3">
-                              <button
-                                type="submit"
-                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                              >
-                                Save contact
-                              </button>
-                            </div>
-                          </form>
-                          <form
-                            action={deleteAssociationContact.bind(null, c.id)}
-                            className="mt-2"
-                          >
-                            <ConfirmSubmitButton
-                              confirmText={`Delete contact ${c.name}?`}
-                              className="text-xs text-red-600 hover:underline"
-                            >
-                              Delete contact
-                            </ConfirmSubmitButton>
-                          </form>
-                        </div>
-                      ))}
-                      {!assoc.association_contacts?.length && (
-                        <p className="text-sm text-slate-500">
-                          No contacts yet.
-                        </p>
-                      )}
-                      <CollapsibleDetails summary="+ Add Contact">
-                        <form
-                          action={addAssociationContact.bind(null, assoc.id)}
-                          className="mt-2 space-y-2"
-                        >
-                          <label className="block text-sm text-slate-700">
-                            Name
-                            <input
-                              name="name"
-                              required
-                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                            />
-                          </label>
-                          <label className="block text-sm text-slate-700">
-                            Role
-                            <input
-                              name="role"
-                              placeholder="President, Registrar"
-                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                            />
-                          </label>
-                          <label className="block text-sm text-slate-700">
-                            Phone
-                            <input
-                              name="phone"
-                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                            />
-                          </label>
-                          <label className="block text-sm text-slate-700">
-                            Email
-                            <input
-                              name="email"
-                              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                            />
-                          </label>
-                          <button
-                            type="submit"
-                            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                          >
-                            Add contact
-                          </button>
-                        </form>
-                      </CollapsibleDetails>
-                    </div>
-                  </div>
-                </CollapsibleDetails>
-              )}
 
               {assocTeams.length > 0 && (
                 <table className="w-full text-sm">
@@ -376,7 +176,7 @@ export default async function AssociationsPage({
                       <th className="px-5 py-2 font-medium">Team Contact</th>
                       <th className="px-5 py-2 font-medium">Division</th>
                       <th className="px-5 py-2 font-medium">Status</th>
-                      <th className="px-5 py-2 font-medium">Roster</th>
+                      <th className="px-5 py-2 font-medium">Players</th>
                       <th className="px-5 py-2 font-medium">Waivers</th>
                     </tr>
                   </thead>
@@ -390,73 +190,6 @@ export default async function AssociationsPage({
                         >
                           <td className="px-5 py-3 font-medium text-slate-900">
                             {team.name}
-                            {isDirector && (
-                              <>
-                                <form action={deleteTeam.bind(null, team.id)}>
-                                  <ConfirmSubmitButton
-                                    confirmText={`Delete ${team.name}? This can't be undone.`}
-                                    className="mt-0.5 block text-xs font-normal text-red-600 hover:underline"
-                                  >
-                                    Delete
-                                  </ConfirmSubmitButton>
-                                </form>
-                                <CollapsibleDetails
-                                  className="relative mt-0.5"
-                                  summary="Edit"
-                                  summaryClassName="cursor-pointer text-xs font-normal text-blue-600"
-                                >
-                                  <form
-                                    key={`${team.name}-${team.division_id}-${team.registration_status}`}
-                                    action={updateTeam.bind(null, team.id)}
-                                    className="absolute left-0 z-10 mt-1 w-64 space-y-2 rounded-lg border border-slate-200 bg-white p-3 shadow-lg"
-                                  >
-                                    <label className="block text-xs font-normal text-slate-700">
-                                      Team name
-                                      <input
-                                        name="name"
-                                        defaultValue={team.name}
-                                        required
-                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                      />
-                                    </label>
-                                    <label className="block text-xs font-normal text-slate-700">
-                                      Division
-                                      <select
-                                        name="division_id"
-                                        defaultValue={team.division_id ?? ""}
-                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                      >
-                                        <option value="">Unassigned</option>
-                                        {divisions.map((d) => (
-                                          <option key={d.id} value={d.id}>
-                                            {d.name}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </label>
-                                    <label className="block text-xs font-normal text-slate-700">
-                                      Status
-                                      <select
-                                        name="registration_status"
-                                        defaultValue={team.registration_status}
-                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                      >
-                                        <option value="pending">Pending</option>
-                                        <option value="registered">
-                                          Registered
-                                        </option>
-                                      </select>
-                                    </label>
-                                    <button
-                                      type="submit"
-                                      className="w-full rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
-                                    >
-                                      Save
-                                    </button>
-                                  </form>
-                                </CollapsibleDetails>
-                              </>
-                            )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
                             {contacts.length ? (
@@ -471,303 +204,31 @@ export default async function AssociationsPage({
                                     </>
                                   )}
                                   {contact.email && ` · ${contact.email}`}
-                                  {isDirector && (
-                                    <>
-                                      {" · "}
-                                      <form
-                                        action={deleteTeamContact.bind(
-                                          null,
-                                          contact.id,
-                                        )}
-                                        className="inline"
-                                      >
-                                        <ConfirmSubmitButton
-                                          confirmText={`Delete contact ${contact.name}?`}
-                                          className="text-xs text-red-600 hover:underline"
-                                        >
-                                          Delete
-                                        </ConfirmSubmitButton>
-                                      </form>
-                                      <CollapsibleDetails
-                                        className="inline"
-                                        summary="Edit"
-                                        summaryClassName="ml-1.5 cursor-pointer text-xs text-blue-600"
-                                      >
-                                        <form
-                                          action={updateTeamContact.bind(
-                                            null,
-                                            contact.id,
-                                          )}
-                                          className="mt-1 space-y-1"
-                                        >
-                                          <input
-                                            name="name"
-                                            defaultValue={contact.name}
-                                            aria-label="Contact name"
-                                            placeholder="Name"
-                                            required
-                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                          />
-                                          <input
-                                            name="role"
-                                            defaultValue={contact.role ?? ""}
-                                            aria-label="Contact role"
-                                            placeholder="Role"
-                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                          />
-                                          <input
-                                            name="phone"
-                                            defaultValue={contact.phone ?? ""}
-                                            aria-label="Contact phone"
-                                            placeholder="Phone"
-                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                          />
-                                          <input
-                                            name="email"
-                                            defaultValue={contact.email ?? ""}
-                                            aria-label="Contact email"
-                                            placeholder="Email"
-                                            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                          />
-                                          <button
-                                            type="submit"
-                                            className="text-xs text-blue-600 hover:underline"
-                                          >
-                                            Save
-                                          </button>
-                                        </form>
-                                      </CollapsibleDetails>
-                                    </>
-                                  )}
                                 </div>
                               ))
                             ) : (
-                              <p>
-                                Same as association
-                                {primaryContact?.phone && (
-                                  <>
-                                    {" · "}
-                                    <TextLink phone={primaryContact.phone} />
-                                  </>
-                                )}
-                              </p>
-                            )}
-                            {isDirector && (
-                              <CollapsibleDetails
-                                className="mt-1"
-                                summary="+ Add contact"
-                                summaryClassName="cursor-pointer text-xs text-blue-600"
-                              >
-                                <form
-                                  action={addTeamContact.bind(null, team.id)}
-                                  className="mt-1 space-y-1"
-                                >
-                                  <input
-                                    name="name"
-                                    aria-label="Contact name"
-                                    placeholder="Name"
-                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <input
-                                    name="role"
-                                    aria-label="Contact role"
-                                    placeholder="Role"
-                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <input
-                                    name="phone"
-                                    aria-label="Contact phone"
-                                    placeholder="Phone"
-                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <input
-                                    name="email"
-                                    aria-label="Contact email"
-                                    placeholder="Email"
-                                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
-                                  />
-                                  <button
-                                    type="submit"
-                                    className="text-xs text-blue-600 hover:underline"
-                                  >
-                                    Add
-                                  </button>
-                                </form>
-                              </CollapsibleDetails>
+                              <p>Same as association</p>
                             )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
                             {team.divisions?.name ?? "—"}
                           </td>
                           <td className="px-5 py-3">
-                            {isDirector ? (
-                              <StatusSelect
-                                status={team.registration_status}
-                                action={updateTeamStatus.bind(null, team.id)}
-                                options={[
-                                  { value: "pending", label: "Pending" },
-                                  { value: "registered", label: "Registered" },
-                                ]}
-                              />
-                            ) : (
-                              <span className="capitalize">
-                                {team.registration_status}
-                              </span>
-                            )}
+                            <span className="capitalize text-slate-700">
+                              {team.registration_status}
+                            </span>
                           </td>
-                          <td className="px-5 py-3">
-                            {team.roster_uploaded_at ? (
-                              <a
-                                href={`/associations/roster/${team.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-medium text-green-700 hover:underline"
-                              >
-                                Uploaded
-                              </a>
-                            ) : (
-                              <span className="font-medium text-amber-700">
-                                Not Uploaded
-                              </span>
-                            )}
-                            {isDirector && (
-                              <form
-                                action={uploadRoster.bind(null, team.id)}
-                                className="mt-1 flex items-center gap-1"
-                              >
-                                <input
-                                  type="file"
-                                  name="roster_file"
-                                  className="w-28 text-xs"
-                                />
-                                <button
-                                  type="submit"
-                                  className="text-xs text-blue-600 hover:underline"
-                                >
-                                  Upload
-                                </button>
-                              </form>
-                            )}
+                          <td className="px-5 py-3 text-slate-500">
+                            {team.players?.length ?? 0}
                           </td>
-                          <td className="px-5 py-3">
-                            <CollapsibleDetails
-                              summary={team.waivers.length}
-                              summaryClassName="cursor-pointer text-slate-700"
-                            >
-                              {team.waivers.length ? (
-                                <ul className="mt-2 space-y-1 text-xs">
-                                  {team.waivers.map((w: Waiver) => (
-                                    <li key={w.id} className="text-slate-600">
-                                      {w.participant_first_name}{" "}
-                                      {w.participant_last_name}
-                                      {w.guardian_first_name && (
-                                        <span className="text-slate-400">
-                                          {" "}
-                                          — guardian {w.guardian_first_name}{" "}
-                                          {w.guardian_last_name}
-                                        </span>
-                                      )}
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p className="mt-2 text-xs text-slate-400">
-                                  No waivers submitted yet.
-                                </p>
-                              )}
-                            </CollapsibleDetails>
+                          <td className="px-5 py-3 text-slate-500">
+                            {team.waivers?.length ?? 0}
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-              )}
-
-              {isDirector && tournament && (
-                <CollapsibleDetails
-                  className="border-t border-slate-100 px-5 py-3"
-                  summary="+ Add Team"
-                >
-                  <form
-                    action={createTeam}
-                    className="mt-3 grid grid-cols-2 gap-3"
-                  >
-                    <input type="hidden" name="association_id" value={assoc.id} />
-                    <label className="col-span-2 text-sm text-slate-700">
-                      Team name
-                      <input
-                        name="name"
-                        defaultValue={assoc.name}
-                        required
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      />
-                    </label>
-                    <label className="text-sm text-slate-700">
-                      Division
-                      <select
-                        name="division_id"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      >
-                        <option value="">Unassigned</option>
-                        {divisions.map((d) => (
-                          <option key={d.id} value={d.id}>
-                            {d.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="text-sm text-slate-700">
-                      Status
-                      <select
-                        name="registration_status"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="registered">Registered</option>
-                      </select>
-                    </label>
-                    <p className="col-span-2 text-xs text-slate-400">
-                      Team contact — leave blank to use the association&apos;s
-                      contact
-                    </p>
-                    <label className="text-sm text-slate-700">
-                      Name
-                      <input
-                        name="contact_name"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      />
-                    </label>
-                    <label className="text-sm text-slate-700">
-                      Role
-                      <input
-                        name="contact_role"
-                        placeholder="Manager, Coach"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      />
-                    </label>
-                    <label className="text-sm text-slate-700">
-                      Phone
-                      <input
-                        name="contact_phone"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      />
-                    </label>
-                    <label className="text-sm text-slate-700">
-                      Email
-                      <input
-                        name="contact_email"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                    >
-                      Add team
-                    </button>
-                  </form>
-                </CollapsibleDetails>
               )}
             </div>
           );
@@ -777,68 +238,6 @@ export default async function AssociationsPage({
           <p className="text-sm text-slate-500">No associations yet.</p>
         )}
       </div>
-
-      {isDirector && (
-        <CollapsibleDetails
-          className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4"
-          summary="+ Add Association"
-          summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
-        >
-          <form action={createAssociation} className="mt-4 grid grid-cols-2 gap-3">
-            <label className="col-span-2 text-sm text-slate-700">
-              Association name
-              <input
-                name="name"
-                required
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              />
-            </label>
-            <label className="col-span-2 text-sm text-slate-700">
-              Mascot
-              <input
-                name="mascot"
-                placeholder="Rebels"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              />
-            </label>
-            <label className="text-sm text-slate-700">
-              Contact name
-              <input
-                name="contact_name"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              />
-            </label>
-            <label className="text-sm text-slate-700">
-              Contact role
-              <input
-                name="contact_role"
-                placeholder="President, Registrar"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              />
-            </label>
-            <label className="text-sm text-slate-700">
-              Contact phone
-              <input
-                name="contact_phone"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              />
-            </label>
-            <label className="col-span-2 text-sm text-slate-700">
-              Contact email
-              <input
-                name="contact_email"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              />
-            </label>
-            <button
-              type="submit"
-              className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-            >
-              Add association
-            </button>
-          </form>
-        </CollapsibleDetails>
-      )}
     </div>
   );
 }
