@@ -56,7 +56,7 @@ export default async function BudgetPage() {
 
   return (
     <div className="flex-1 px-8 py-8">
-      <h1 className="text-xl font-semibold text-slate-900">Budget</h1>
+      <h1 className="font-display text-2xl font-bold text-slate-900">Budget</h1>
       <p className="mt-1 text-sm text-slate-500">
         Forecasted vs. actual by category.
       </p>
