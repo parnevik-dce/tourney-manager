@@ -58,6 +58,7 @@ export async function updateAssociation(
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/list");
 }
 
 export async function updateAssociationContact(
@@ -298,6 +299,7 @@ export async function deleteAssociation(associationId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations");
+  revalidatePath("/associations/list");
 }
 
 export async function deleteTeam(teamId: string) {

@@ -22,6 +22,7 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 import { TextLink } from "@/components/text-link";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsFilterBar } from "@/components/associations-filter-bar";
+import { AssociationsSubNav } from "@/components/associations-sub-nav";
 
 type Waiver = {
   id: string;
@@ -123,6 +124,8 @@ export default async function AssociationsPage({
         Registration status tracked here; official registration lives in
         SportsEngine.
       </p>
+
+      <AssociationsSubNav />
 
       {errorMessage && (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
