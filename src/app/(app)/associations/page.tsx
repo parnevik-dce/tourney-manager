@@ -21,6 +21,7 @@ import { StatusSelect } from "@/components/status-select";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { TextLink } from "@/components/text-link";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { AssociationsFilterBar } from "@/components/associations-filter-bar";
 
 type Waiver = {
   id: string;
@@ -41,9 +42,19 @@ type Contact = {
 export default async function AssociationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    association?: string;
+    division?: string;
+    status?: string;
+  }>;
 }) {
-  const { error: errorMessage } = await searchParams;
+  const {
+    error: errorMessage,
+    association: associationFilter = "",
+    division: divisionFilter = "",
+    status: statusFilter = "",
+  } = await searchParams;
   const supabase = await createClient();
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
@@ -81,6 +92,28 @@ export default async function AssociationsPage({
     teamsByAssociation.set(team.association_id, list);
   }
 
+  const hasTeamFilter = Boolean(divisionFilter || statusFilter);
+  const visibleAssociations = (associations ?? [])
+    .filter((a) => !associationFilter || a.id === associationFilter)
+    .map((assoc) => {
+      let assocTeams = teamsByAssociation.get(assoc.id) ?? [];
+      if (divisionFilter) {
+        assocTeams = assocTeams.filter((t) => t.division_id === divisionFilter);
+      }
+      if (statusFilter) {
+        assocTeams = assocTeams.filter(
+          (t) => t.registration_status === statusFilter,
+        );
+      }
+      return { assoc, assocTeams };
+    })
+    .filter(({ assocTeams }) => !hasTeamFilter || assocTeams.length > 0);
+
+  const filteredTeamCount = visibleAssociations.reduce(
+    (sum, { assocTeams }) => sum + assocTeams.length,
+    0,
+  );
+
   return (
     <div className="flex-1 px-8 py-8">
       <h1 className="font-display text-2xl font-bold text-slate-900">
@@ -104,9 +137,30 @@ export default async function AssociationsPage({
         </p>
       )}
 
+      {tournament && (
+        <>
+          <AssociationsFilterBar
+            associations={(associations ?? []).map((a) => ({
+              id: a.id,
+              name: a.name,
+            }))}
+            divisions={divisions.map((d) => ({ id: d.id, name: d.name }))}
+            association={associationFilter}
+            division={divisionFilter}
+            status={statusFilter}
+          />
+          {(associationFilter || divisionFilter || statusFilter) && (
+            <p className="mt-3 text-sm text-slate-500">
+              {filteredTeamCount}{" "}
+              {filteredTeamCount === 1 ? "team matches" : "teams match"} the
+              selected filters.
+            </p>
+          )}
+        </>
+      )}
+
       <div className="mt-6 space-y-4">
-        {associations?.map((assoc) => {
-          const assocTeams = teamsByAssociation.get(assoc.id) ?? [];
+        {visibleAssociations.map(({ assoc, assocTeams }) => {
           const primaryContact = assoc.association_contacts?.[0];
           const registeredCount = assocTeams.filter(
             (t) => t.registration_status === "registered",
