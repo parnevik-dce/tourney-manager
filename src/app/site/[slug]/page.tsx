@@ -96,7 +96,7 @@ export default async function PublicSitePage({
           <img
             src={tournament.logo_url}
             alt=""
-            className="mx-auto h-16 w-16 rounded object-contain"
+            className="mx-auto h-32 w-32 rounded object-contain"
           />
         )}
         <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
