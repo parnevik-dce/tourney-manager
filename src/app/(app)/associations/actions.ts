@@ -359,3 +359,106 @@ export async function deleteTeam(teamId: string) {
   revalidatePath("/associations");
   revalidatePath("/associations/teams");
 }
+
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ",") {
+      row.push(field);
+      field = "";
+    } else if (char === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (char !== "\r") {
+      field += char;
+    }
+  }
+  if (field.length || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+const ROSTER_CSV_HEADERS = [
+  "first_name",
+  "last_name",
+  "jersey_number",
+  "birthdate",
+  "usa_lacrosse_number",
+  "email",
+] as const;
+
+export async function importRosterCsv(teamId: string, formData: FormData) {
+  const profile = await getCurrentProfile();
+  if (profile?.role !== "director") throw new Error("Not authorized");
+
+  const file = formData.get("csv_file");
+  if (!(file instanceof File) || file.size === 0) return;
+
+  const text = await file.text();
+  const rows = parseCsv(text).filter((r) => r.some((c) => c.trim() !== ""));
+  if (rows.length < 2) return;
+
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const colIndex = Object.fromEntries(
+    ROSTER_CSV_HEADERS.map((h) => [h, header.indexOf(h)]),
+  );
+
+  const players = rows
+    .slice(1)
+    .map((r) => {
+      const first_name = r[colIndex.first_name]?.trim() || null;
+      const last_name = r[colIndex.last_name]?.trim() || null;
+      return {
+        team_id: teamId,
+        // Legacy required column — kept in sync for any code still reading it.
+        full_name: `${first_name ?? ""} ${last_name ?? ""}`.trim(),
+        first_name,
+        last_name,
+        jersey_number: r[colIndex.jersey_number]?.trim() || null,
+        birthdate: r[colIndex.birthdate]?.trim() || null,
+        usa_lacrosse_number: r[colIndex.usa_lacrosse_number]?.trim() || null,
+        email: r[colIndex.email]?.trim() || null,
+      };
+    })
+    .filter((p) => p.first_name || p.last_name);
+
+  if (!players.length) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("players").insert(players);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations/rosters");
+}
+
+export async function deletePlayer(playerId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("players").delete().eq("id", playerId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/associations/rosters");
+}
