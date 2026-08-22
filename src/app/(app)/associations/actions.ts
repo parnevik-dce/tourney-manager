@@ -141,7 +141,7 @@ export async function createTeam(formData: FormData) {
   if (!tournament) throw new Error("No active tournament");
 
   const association_id = String(formData.get("association_id"));
-  const name = String(formData.get("name") ?? "");
+  const name = String(formData.get("name") || "").trim() || null;
   const division_id = String(formData.get("division_id") || "") || null;
   const registration_status = String(
     formData.get("registration_status") || "pending",
@@ -184,7 +184,7 @@ export async function createTeam(formData: FormData) {
 export async function updateTeam(teamId: string, formData: FormData) {
   const supabase = await createClient();
 
-  const name = String(formData.get("name") ?? "");
+  const name = String(formData.get("name") || "").trim() || null;
   const division_id = String(formData.get("division_id") || "") || null;
   const registration_status = String(
     formData.get("registration_status") || "pending",

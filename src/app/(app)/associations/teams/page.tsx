@@ -12,6 +12,7 @@ import {
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
+import { teamDisplayName } from "@/lib/team-name";
 
 type Contact = {
   id: string;
@@ -90,10 +91,10 @@ export default async function TeamsListPage() {
                 </select>
               </label>
               <label className="col-span-2 text-sm text-slate-700">
-                Team name
+                Team name (optional — only needed if this association has
+                multiple teams in the same division)
                 <input
                   name="name"
-                  required
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                 />
               </label>
@@ -181,6 +182,11 @@ export default async function TeamsListPage() {
               <div className="divide-y divide-slate-50">
                 {teams.map((team) => {
                   const contacts: Contact[] = team.team_contacts ?? [];
+                  const displayName = teamDisplayName(
+                    team.name,
+                    team.associations?.name ?? "Unassociated",
+                    team.divisions?.name,
+                  );
                   return (
                     <CollapsibleDetails
                       key={team.id}
@@ -188,7 +194,7 @@ export default async function TeamsListPage() {
                       summary={
                         <>
                           <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
-                            {team.name}
+                            {displayName}
                           </span>
                           <span className="text-slate-500">
                             {team.associations?.name ?? "—"}
@@ -208,7 +214,7 @@ export default async function TeamsListPage() {
                           {isDirector ? (
                             <form action={deleteTeam.bind(null, team.id)}>
                               <ConfirmSubmitButton
-                                confirmText={`Delete ${team.name}? This can't be undone.`}
+                                confirmText={`Delete ${displayName}? This can't be undone.`}
                                 className="text-xs text-red-600 hover:underline"
                               >
                                 Delete
@@ -228,11 +234,12 @@ export default async function TeamsListPage() {
                             className="space-y-2"
                           >
                             <label className="block text-sm text-slate-700">
-                              Team name
+                              Team name (optional — only needed if this
+                              association has multiple teams in the same
+                              division)
                               <input
                                 name="name"
-                                defaultValue={team.name}
-                                required
+                                defaultValue={team.name ?? ""}
                                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                               />
                             </label>

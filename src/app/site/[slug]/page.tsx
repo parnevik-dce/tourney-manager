@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { teamDisplayName } from "@/lib/team-name";
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -77,7 +78,7 @@ export default async function PublicSitePage({
         .order("sort_order"),
       supabase
         .from("teams")
-        .select("id, name, division_id, registration_status")
+        .select("*, associations(name)")
         .eq("tournament_id", tournament.id),
       supabase
         .from("site_updates")
@@ -147,7 +148,9 @@ export default async function PublicSitePage({
                   {divTeams.length > 0 && (
                     <ul className="mt-2 space-y-0.5 text-xs text-slate-500">
                       {divTeams.map((t) => (
-                        <li key={t.id}>{t.name}</li>
+                        <li key={t.id}>
+                          {teamDisplayName(t.name, t.associations?.name ?? "Team")}
+                        </li>
                       ))}
                     </ul>
                   )}

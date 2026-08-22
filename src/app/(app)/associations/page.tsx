@@ -3,6 +3,7 @@ import { getCurrentTournament } from "@/lib/tournament";
 import { TextLink } from "@/components/text-link";
 import { AssociationsFilterBar } from "@/components/associations-filter-bar";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
+import { teamDisplayName } from "@/lib/team-name";
 
 type Contact = {
   id: string;
@@ -189,7 +190,11 @@ export default async function AssociationsPage({
                           className="border-b border-slate-50 last:border-0"
                         >
                           <td className="px-5 py-3 font-medium text-slate-900">
-                            {team.name}
+                            {teamDisplayName(
+                              team.name,
+                              assoc.name,
+                              team.divisions?.name,
+                            )}
                           </td>
                           <td className="px-5 py-3 text-slate-500">
                             {contacts.length ? (
