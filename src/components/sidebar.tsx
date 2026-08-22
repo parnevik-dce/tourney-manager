@@ -57,10 +57,10 @@ export function Sidebar({
           />
         )}
         <div>
-          <p className="text-sm font-bold tracking-tight text-slate-900">
+          <p className="font-display text-base font-bold tracking-tight text-slate-900">
             ICE BREAKER
           </p>
-          <p className="text-xs font-medium text-slate-400">
+          <p className="text-[10px] font-bold tracking-wide text-slate-400">
             TOURNAMENT MANAGER
           </p>
         </div>

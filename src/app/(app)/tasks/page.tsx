@@ -48,7 +48,7 @@ export default async function TasksPage() {
 
   return (
     <div className="flex-1 px-8 py-8">
-      <h1 className="text-xl font-semibold text-slate-900">Task Board</h1>
+      <h1 className="font-display text-2xl font-bold text-slate-900">Task Board</h1>
       <p className="mt-1 text-sm text-slate-500">
         Based on the Ice Breaker planning timeline.
       </p>

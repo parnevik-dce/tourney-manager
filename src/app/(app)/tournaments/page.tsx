@@ -25,7 +25,7 @@ export default async function TournamentsPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-8 py-8">
-      <h1 className="text-xl font-semibold text-slate-900">Tournaments</h1>
+      <h1 className="font-display text-2xl font-bold text-slate-900">Tournaments</h1>
 
       <ul className="mt-6 divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
         {tournaments?.length ? (
