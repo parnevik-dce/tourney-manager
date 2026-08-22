@@ -6,6 +6,7 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { CopyButton } from "@/components/copy-button";
+import { teamDisplayName } from "@/lib/team-name";
 
 const REFORMAT_PROMPT = `Reformat the attached youth lacrosse team roster into a CSV with exactly this header row: first_name,last_name,jersey_number,birthdate,usa_lacrosse_number,email. Output only the CSV — no extra commentary. Use YYYY-MM-DD for birthdate. Leave a field blank if it's not present in the source file. Keep jersey_number and usa_lacrosse_number as plain text exactly as they appear in the source (e.g. "TBD" stays "TBD"; don't reformat long ID numbers).`;
 
@@ -81,7 +82,11 @@ export default async function RostersPage() {
                 <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                   <div>
                     <p className="font-semibold text-slate-900">
-                      {team.name}
+                      {teamDisplayName(
+                        team.name,
+                        team.associations?.name ?? "Unassociated",
+                        team.divisions?.name,
+                      )}
                     </p>
                     <p className="text-sm text-slate-500">
                       {team.associations?.name ?? "—"}

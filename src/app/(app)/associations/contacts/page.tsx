@@ -13,6 +13,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { TextLink } from "@/components/text-link";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { ContactsFilterBar } from "@/components/contacts-filter-bar";
+import { teamDisplayName } from "@/lib/team-name";
 
 type UnifiedContact = {
   id: string;
@@ -52,7 +53,7 @@ export default async function ContactsPage({
           .select("*"),
         supabase
           .from("teams")
-          .select("id, name, association_id, team_contacts(*)")
+          .select("*, divisions(name), team_contacts(*)")
           .eq("tournament_id", tournament.id),
       ])
     : [{ data: null }, { data: null }];
@@ -85,7 +86,7 @@ export default async function ContactsPage({
         role: c.role,
         phone: c.phone,
         email: c.email,
-        belongsTo: `${team.name} (${assoc?.name ?? "—"})`,
+        belongsTo: `${teamDisplayName(team.name, assoc?.name ?? "—", team.divisions?.name)} (${assoc?.name ?? "—"})`,
         associationId: team.association_id,
       });
     }
@@ -103,10 +104,13 @@ export default async function ContactsPage({
     )
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const teamOptions = (teams ?? []).map((t) => ({
-    id: t.id,
-    label: `${t.name} (${associationById.get(t.association_id)?.name ?? "—"})`,
-  }));
+  const teamOptions = (teams ?? []).map((t) => {
+    const assocName = associationById.get(t.association_id)?.name ?? "—";
+    return {
+      id: t.id,
+      label: `${teamDisplayName(t.name, assocName, t.divisions?.name)} (${assocName})`,
+    };
+  });
 
   return (
     <div className="flex-1 px-8 py-8">

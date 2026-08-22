@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { submitWaiver } from "./actions";
+import { teamDisplayName } from "@/lib/team-name";
 
 function Shell({
   title,
@@ -179,6 +180,8 @@ export default async function WaiverPage({
   }
 
   const divisionTeams = assocTeams.filter((t) => t.division_id === divisionId);
+  const selectedAssociationName =
+    associationsAll.find((a) => a.id === associationId)?.name ?? "Team";
 
   if (!teamId) {
     return (
@@ -195,7 +198,7 @@ export default async function WaiverPage({
             <option value="">Select your team…</option>
             {divisionTeams.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name}
+                {teamDisplayName(t.name, selectedAssociationName)}
               </option>
             ))}
           </select>
@@ -232,7 +235,8 @@ export default async function WaiverPage({
         </p>
       )}
       <p className="mb-4 text-sm text-slate-500">
-        Submitting waiver for <strong>{team?.name}</strong>.
+        Submitting waiver for{" "}
+        <strong>{teamDisplayName(team?.name, selectedAssociationName)}</strong>.
       </p>
       <form action={submitWaiver} className="space-y-4">
         <input type="hidden" name="tournament_id" value={tournament.id} />

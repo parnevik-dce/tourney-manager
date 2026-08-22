@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { teamDisplayName } from "@/lib/team-name";
 
 function csvField(value: string | null): string {
   const v = value ?? "";
@@ -25,7 +26,7 @@ export async function GET(
 
   const { data: team } = await supabase
     .from("teams")
-    .select("name")
+    .select("*, associations(name), divisions(name)")
     .eq("id", teamId)
     .single();
 
@@ -64,7 +65,14 @@ export async function GET(
   ];
 
   const csv = lines.join("\n") + "\n";
-  const filename = `${(team?.name ?? "roster").replace(/[^a-z0-9]+/gi, "-")}-roster.csv`;
+  const displayName = team
+    ? teamDisplayName(
+        team.name,
+        team.associations?.name ?? "roster",
+        team.divisions?.name,
+      )
+    : "roster";
+  const filename = `${displayName.replace(/[^a-z0-9]+/gi, "-")}-roster.csv`;
 
   return new NextResponse(csv, {
     headers: {
