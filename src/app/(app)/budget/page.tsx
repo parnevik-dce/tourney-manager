@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
@@ -14,6 +13,7 @@ import {
 import { AmountInput } from "@/components/amount-input";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { BudgetSubNav } from "@/components/budget-sub-nav";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -45,24 +45,17 @@ export default async function BudgetPage() {
           .select("*")
           .eq("tournament_id", tournament.id)
           .order("category")
-          .order("created_at"),
+          .order("due_date"),
         supabase
           .from("budget_categories")
           .select("*")
           .eq("tournament_id", tournament.id)
-          .order("sort_order"),
+          .order("name"),
       ])
     : [{ data: null }, { data: null }];
 
   const items = rawItems ?? [];
   const budgetCategories = rawCategories ?? [];
-
-  const categories = new Map<string, typeof items>();
-  for (const item of items) {
-    const list = categories.get(item.category) ?? [];
-    list.push(item);
-    categories.set(item.category, list);
-  }
 
   const totalForecast = items.reduce((sum, i) => sum + i.forecasted_amount, 0);
   const totalActual = items.reduce(
@@ -77,6 +70,8 @@ export default async function BudgetPage() {
       <p className="mt-1 text-sm text-slate-500">
         Forecasted vs. actual by category.
       </p>
+
+      <BudgetSubNav />
 
       {!tournament && (
         <p className="mt-6 text-sm text-amber-700">
@@ -146,6 +141,7 @@ export default async function BudgetPage() {
                   name="forecasted_amount"
                   type="number"
                   step="0.01"
+                  min="0"
                   required
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                 />
@@ -156,8 +152,13 @@ export default async function BudgetPage() {
                   name="actual_amount"
                   type="number"
                   step="0.01"
+                  min="0"
                   className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                 />
+              </label>
+              <label className="flex items-center gap-1.5 text-sm text-slate-700">
+                <input type="checkbox" name="is_revenue" />
+                Revenue (e.g. registration fees, merch commission)
               </label>
               <label className="col-span-2 text-sm text-slate-700">
                 Notes
@@ -268,252 +269,226 @@ export default async function BudgetPage() {
       {tournament && (
         <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
           {items.length ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-2 font-medium">Category / Item</th>
-                  <th className="px-5 py-2 font-medium">Payee</th>
-                  <th className="px-5 py-2 font-medium text-right">Forecast</th>
-                  <th className="px-5 py-2 font-medium text-right">Actual</th>
-                  <th className="px-5 py-2 font-medium text-right">Variance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from(categories.entries()).map(([category, catItems]) => {
-                  const catForecast = catItems.reduce(
-                    (s, i) => s + i.forecasted_amount,
-                    0,
-                  );
-                  const catActual = catItems.reduce(
-                    (s, i) => s + (i.actual_amount ?? 0),
-                    0,
-                  );
-                  const catVariance = catActual - catForecast;
-
+            <div className="min-w-[820px] text-sm">
+              <div className="grid grid-cols-[2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
+                <span>Item</span>
+                <span>Category</span>
+                <span>Payee</span>
+                <span className="text-right">Forecast</span>
+                <span className="text-right">Actual</span>
+                <span className="text-right">Variance</span>
+                <span />
+              </div>
+              <div className="divide-y divide-slate-50">
+                {items.map((item) => {
+                  const variance =
+                    (item.actual_amount ?? 0) - item.forecasted_amount;
                   return (
-                    <Fragment key={category}>
-                      <tr className="border-b border-slate-100 bg-slate-50 font-medium text-slate-900">
-                        <td className="px-5 py-2">{category}</td>
-                        <td className="px-5 py-2"></td>
-                        <td className="px-5 py-2 text-right">
-                          {currency.format(catForecast)}
-                        </td>
-                        <td className="px-5 py-2 text-right">
-                          {currency.format(catActual)}
-                        </td>
-                        <td
-                          className={`px-5 py-2 text-right ${varianceColor(catVariance)}`}
-                        >
-                          {formatVariance(catVariance)}
-                        </td>
-                      </tr>
-                      {catItems.map((item) => {
-                        const variance = (item.actual_amount ?? 0) - item.forecasted_amount;
-                        return (
-                          <Fragment key={item.id}>
-                            <tr className="border-b border-slate-50 text-slate-600">
-                              <td className="px-5 py-2 pl-9">
-                                {item.line_item ?? "—"}
-                                {item.paid_by && (
-                                  <span className="ml-2 text-xs text-slate-400">
-                                    paid by {item.paid_by}
-                                  </span>
-                                )}
-                                {item.due_date && (
-                                  <span className="ml-2 text-xs text-slate-400">
-                                    {item.due_date}
-                                  </span>
-                                )}
-                                {item.receipt_path && (
-                                  <a
-                                    href={`/budget/receipt/${item.id}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="ml-2 text-xs text-blue-600 hover:underline"
-                                  >
-                                    Receipt
-                                  </a>
-                                )}
-                              </td>
-                              <td className="px-5 py-2">{item.payee ?? "—"}</td>
-                              <td className="px-5 py-2 text-right">
-                                {currency.format(item.forecasted_amount)}
-                              </td>
-                              <td className="px-5 py-2 text-right">
-                                {isDirector ? (
-                                  <AmountInput
-                                    defaultValue={item.actual_amount}
-                                    action={updateBudgetItemActual.bind(
-                                      null,
-                                      item.id,
-                                    )}
-                                  />
-                                ) : item.actual_amount != null ? (
-                                  currency.format(item.actual_amount)
-                                ) : (
-                                  "—"
-                                )}
-                              </td>
-                              <td
-                                className={`px-5 py-2 text-right ${
-                                  item.actual_amount != null
-                                    ? varianceColor(variance)
-                                    : "text-slate-300"
-                                }`}
-                              >
-                                {item.actual_amount != null
-                                  ? formatVariance(variance)
-                                  : "—"}
-                              </td>
-                            </tr>
-                            {isDirector && (
-                              <tr className="border-b border-slate-50 last:border-0">
-                                <td colSpan={5} className="px-5 pb-3 pl-9">
-                                  <CollapsibleDetails
-                                    summary="Edit"
-                                    summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
-                                  >
-                                    <form
-                                      action={updateBudgetItem.bind(
-                                        null,
-                                        item.id,
-                                      )}
-                                      className="mt-3 grid grid-cols-2 gap-3"
-                                    >
-                                      <label className="text-sm text-slate-700">
-                                        Category
-                                        <select
-                                          name="category"
-                                          defaultValue={item.category}
-                                          required
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        >
-                                          <option value={item.category}>
-                                            {item.category}
-                                          </option>
-                                          {budgetCategories
-                                            .filter((c) => c.name !== item.category)
-                                            .map((c) => (
-                                              <option key={c.id} value={c.name}>
-                                                {c.name}
-                                              </option>
-                                            ))}
-                                        </select>
-                                      </label>
-                                      <label className="text-sm text-slate-700">
-                                        Line item
-                                        <input
-                                          name="line_item"
-                                          defaultValue={item.line_item ?? ""}
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        />
-                                      </label>
-                                      <label className="text-sm text-slate-700">
-                                        Payee
-                                        <input
-                                          name="payee"
-                                          defaultValue={item.payee ?? ""}
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        />
-                                      </label>
-                                      <label className="text-sm text-slate-700">
-                                        Paid by
-                                        <input
-                                          name="paid_by"
-                                          defaultValue={item.paid_by ?? ""}
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        />
-                                      </label>
-                                      <label className="text-sm text-slate-700">
-                                        Date paid
-                                        <input
-                                          name="due_date"
-                                          type="date"
-                                          defaultValue={item.due_date ?? ""}
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        />
-                                      </label>
-                                      <label className="text-sm text-slate-700">
-                                        Forecasted amount
-                                        <input
-                                          name="forecasted_amount"
-                                          type="number"
-                                          step="0.01"
-                                          defaultValue={item.forecasted_amount}
-                                          required
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        />
-                                      </label>
-                                      <label className="text-sm text-slate-700">
-                                        Actual amount
-                                        <input
-                                          name="actual_amount"
-                                          type="number"
-                                          step="0.01"
-                                          defaultValue={item.actual_amount ?? ""}
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        />
-                                      </label>
-                                      <label className="text-sm text-slate-700">
-                                        Receipt
-                                        <input
-                                          name="receipt_file"
-                                          type="file"
-                                          accept="image/*,.pdf"
-                                          className="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
-                                        />
-                                        {item.receipt_path && (
-                                          <label className="mt-1 flex items-center gap-1.5 text-xs font-normal text-slate-500">
-                                            <input
-                                              type="checkbox"
-                                              name="remove_receipt"
-                                            />
-                                            Remove current receipt
-                                          </label>
-                                        )}
-                                      </label>
-                                      <label className="col-span-2 text-sm text-slate-700">
-                                        Notes
-                                        <textarea
-                                          name="notes"
-                                          rows={2}
-                                          defaultValue={item.notes ?? ""}
-                                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                        />
-                                      </label>
-                                      <button
-                                        type="submit"
-                                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                                      >
-                                        Save
-                                      </button>
-                                    </form>
-                                    <form
-                                      action={deleteBudgetItem.bind(
-                                        null,
-                                        item.id,
-                                      )}
-                                      className="mt-2"
-                                    >
-                                      <ConfirmSubmitButton
-                                        confirmText={`Delete this budget item? This can't be undone.`}
-                                        className="text-xs text-red-600 hover:underline"
-                                      >
-                                        Delete
-                                      </ConfirmSubmitButton>
-                                    </form>
-                                  </CollapsibleDetails>
-                                </td>
-                              </tr>
+                    <CollapsibleDetails
+                      key={item.id}
+                      summaryClassName="grid grid-cols-[2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                      summary={
+                        <>
+                          <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
+                            {item.line_item ?? "—"}
+                            {item.is_revenue && (
+                              <span className="ml-2 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">
+                                Revenue
+                              </span>
                             )}
-                          </Fragment>
-                        );
-                      })}
-                    </Fragment>
+                            {item.receipt_path && (
+                              <a
+                                href={`/budget/receipt/${item.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="ml-2 text-xs font-normal text-blue-600 hover:underline"
+                              >
+                                Receipt
+                              </a>
+                            )}
+                          </span>
+                          <span className="text-slate-500">
+                            {item.category}
+                          </span>
+                          <span className="text-slate-500">
+                            {item.payee ?? "—"}
+                          </span>
+                          <span className="text-right text-slate-700">
+                            {currency.format(item.forecasted_amount)}
+                          </span>
+                          <span className="text-right">
+                            {isDirector ? (
+                              <AmountInput
+                                defaultValue={item.actual_amount}
+                                action={updateBudgetItemActual.bind(
+                                  null,
+                                  item.id,
+                                )}
+                              />
+                            ) : item.actual_amount != null ? (
+                              currency.format(item.actual_amount)
+                            ) : (
+                              "—"
+                            )}
+                          </span>
+                          <span
+                            className={`text-right ${
+                              item.actual_amount != null
+                                ? varianceColor(variance)
+                                : "text-slate-300"
+                            }`}
+                          >
+                            {item.actual_amount != null
+                              ? formatVariance(variance)
+                              : "—"}
+                          </span>
+                          <span />
+                        </>
+                      }
+                    >
+                      {isDirector && (
+                        <div className="border-t border-slate-100 px-5 py-4">
+                          <form
+                            action={updateBudgetItem.bind(null, item.id)}
+                            className="grid grid-cols-2 gap-3"
+                          >
+                            <label className="text-sm text-slate-700">
+                              Category
+                              <select
+                                name="category"
+                                defaultValue={item.category}
+                                required
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              >
+                                <option value={item.category}>
+                                  {item.category}
+                                </option>
+                                {budgetCategories
+                                  .filter((c) => c.name !== item.category)
+                                  .map((c) => (
+                                    <option key={c.id} value={c.name}>
+                                      {c.name}
+                                    </option>
+                                  ))}
+                              </select>
+                            </label>
+                            <label className="text-sm text-slate-700">
+                              Line item
+                              <input
+                                name="line_item"
+                                defaultValue={item.line_item ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="text-sm text-slate-700">
+                              Payee
+                              <input
+                                name="payee"
+                                defaultValue={item.payee ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="text-sm text-slate-700">
+                              Paid by
+                              <input
+                                name="paid_by"
+                                defaultValue={item.paid_by ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="text-sm text-slate-700">
+                              Date paid
+                              <input
+                                name="due_date"
+                                type="date"
+                                defaultValue={item.due_date ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="text-sm text-slate-700">
+                              Forecasted amount
+                              <input
+                                name="forecasted_amount"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                defaultValue={item.forecasted_amount}
+                                required
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="text-sm text-slate-700">
+                              Actual amount
+                              <input
+                                name="actual_amount"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                defaultValue={item.actual_amount ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="flex items-center gap-1.5 text-sm text-slate-700">
+                              <input
+                                type="checkbox"
+                                name="is_revenue"
+                                defaultChecked={item.is_revenue}
+                              />
+                              Revenue (e.g. registration fees, merch
+                              commission)
+                            </label>
+                            <label className="text-sm text-slate-700">
+                              Receipt
+                              <input
+                                name="receipt_file"
+                                type="file"
+                                accept="image/*,.pdf"
+                                className="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
+                              />
+                              {item.receipt_path && (
+                                <label className="mt-1 flex items-center gap-1.5 text-xs font-normal text-slate-500">
+                                  <input
+                                    type="checkbox"
+                                    name="remove_receipt"
+                                  />
+                                  Remove current receipt
+                                </label>
+                              )}
+                            </label>
+                            <label className="col-span-2 text-sm text-slate-700">
+                              Notes
+                              <textarea
+                                name="notes"
+                                rows={2}
+                                defaultValue={item.notes ?? ""}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <button
+                              type="submit"
+                              className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                            >
+                              Save
+                            </button>
+                          </form>
+                          <form
+                            action={deleteBudgetItem.bind(null, item.id)}
+                            className="mt-2"
+                          >
+                            <ConfirmSubmitButton
+                              confirmText="Delete this budget item? This can't be undone."
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              Delete
+                            </ConfirmSubmitButton>
+                          </form>
+                        </div>
+                      )}
+                    </CollapsibleDetails>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           ) : (
             <p className="px-5 py-6 text-center text-sm text-slate-500">
               No budget items yet.
