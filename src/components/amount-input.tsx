@@ -8,11 +8,12 @@ export function AmountInput({
   action: (formData: FormData) => void;
 }) {
   return (
-    <form action={action}>
+    <form action={action} onClick={(e) => e.stopPropagation()}>
       <input
         key={String(defaultValue)}
         type="number"
         step="0.01"
+        min="0"
         name="actual_amount"
         defaultValue={defaultValue ?? ""}
         placeholder="—"

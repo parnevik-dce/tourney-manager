@@ -9,7 +9,7 @@ function parseAmount(value: FormDataEntryValue | null) {
   const str = String(value ?? "").trim();
   if (!str) return null;
   const num = Number(str);
-  return Number.isFinite(num) ? num : null;
+  return Number.isFinite(num) ? Math.abs(num) : null;
 }
 
 export async function createBudgetItem(formData: FormData) {
@@ -25,6 +25,7 @@ export async function createBudgetItem(formData: FormData) {
   const actual_amount = parseAmount(formData.get("actual_amount"));
   const due_date = String(formData.get("due_date") || "") || null;
   const notes = String(formData.get("notes") || "") || null;
+  const is_revenue = formData.get("is_revenue") === "on";
 
   const { error } = await supabase.from("budget_items").insert({
     tournament_id: tournament.id,
@@ -36,11 +37,13 @@ export async function createBudgetItem(formData: FormData) {
     actual_amount,
     due_date,
     notes,
+    is_revenue,
   });
 
   if (error) throw new Error(error.message);
 
   revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
 }
 
 export async function updateBudgetItem(itemId: string, formData: FormData) {
@@ -54,6 +57,7 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
   const actual_amount = parseAmount(formData.get("actual_amount"));
   const due_date = String(formData.get("due_date") || "") || null;
   const notes = String(formData.get("notes") || "") || null;
+  const is_revenue = formData.get("is_revenue") === "on";
   const removeReceipt = formData.get("remove_receipt") === "on";
 
   const update: Record<string, unknown> = {
@@ -65,6 +69,7 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
     actual_amount,
     due_date,
     notes,
+    is_revenue,
   };
 
   const receiptFile = formData.get("receipt_file");
@@ -97,6 +102,7 @@ export async function updateBudgetItem(itemId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
 }
 
 export async function deleteBudgetItem(itemId: string) {
@@ -121,6 +127,7 @@ export async function deleteBudgetItem(itemId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
 }
 
 export async function updateBudgetItemActual(
@@ -138,6 +145,7 @@ export async function updateBudgetItemActual(
   if (error) throw new Error(error.message);
 
   revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
 }
 
 export async function createBudgetCategory(formData: FormData) {
@@ -165,6 +173,7 @@ export async function createBudgetCategory(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
 }
 
 export async function updateBudgetCategory(
@@ -183,6 +192,7 @@ export async function updateBudgetCategory(
   if (error) throw new Error(error.message);
 
   revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
 }
 
 export async function deleteBudgetCategory(categoryId: string) {
@@ -196,4 +206,5 @@ export async function deleteBudgetCategory(categoryId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
 }
