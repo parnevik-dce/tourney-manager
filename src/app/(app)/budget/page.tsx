@@ -68,6 +68,25 @@ export default async function BudgetPage() {
   );
   const totalVariance = totalActual - totalForecast;
 
+  const revenueItems = items.filter((i) => i.is_revenue);
+  const expenseItems = items.filter((i) => !i.is_revenue);
+  const totalRevenueForecast = revenueItems.reduce(
+    (sum, i) => sum + i.forecasted_amount,
+    0,
+  );
+  const totalRevenueActual = revenueItems.reduce(
+    (sum, i) => sum + (i.actual_amount ?? 0),
+    0,
+  );
+  const totalExpenseForecast = expenseItems.reduce(
+    (sum, i) => sum + i.forecasted_amount,
+    0,
+  );
+  const totalExpenseActual = expenseItems.reduce(
+    (sum, i) => sum + (i.actual_amount ?? 0),
+    0,
+  );
+
   return (
     <div className="flex-1 px-8 py-8">
       <h1 className="font-display text-2xl font-bold text-slate-900">Budget</h1>
@@ -265,6 +284,33 @@ export default async function BudgetPage() {
             </p>
             <p className={`mt-2 text-2xl font-semibold ${varianceColor(totalVariance)}`}>
               {formatVariance(totalVariance)}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {tournament && (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-white p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Total Revenue
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
+              {currency.format(totalRevenueActual)}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Forecast {currency.format(totalRevenueForecast)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Total Expenses
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
+              {currency.format(totalExpenseActual)}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Forecast {currency.format(totalExpenseForecast)}
             </p>
           </div>
         </div>
