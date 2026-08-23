@@ -1,16 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
-import { importRosterCsv, deletePlayer } from "../actions";
+import {
+  importRosterCsv,
+  importRostersCsvBulk,
+  deletePlayer,
+} from "../actions";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { CopyButton } from "@/components/copy-button";
-import { teamDisplayName } from "@/lib/team-name";
+import { teamDisplayName, teamImportLabel } from "@/lib/team-name";
 
 const REFORMAT_PROMPT = `Reformat the attached youth lacrosse team roster into a CSV with exactly this header row: first_name,last_name,jersey_number,birthdate,usa_lacrosse_number,email. Output only the CSV — no extra commentary. Use YYYY-MM-DD for birthdate. Leave a field blank if it's not present in the source file. Keep jersey_number and usa_lacrosse_number as plain text exactly as they appear in the source (e.g. "TBD" stays "TBD"; don't reformat long ID numbers).`;
 
-export default async function RostersPage() {
+const REFORMAT_PROMPT_BULK = `Reformat the attached youth lacrosse team rosters (this may cover multiple teams) into a single CSV with exactly this header row: team,first_name,last_name,jersey_number,birthdate,usa_lacrosse_number,email. Output only the CSV — no extra commentary. For the "team" column, I'll tell you which exact team label to use for each source file/section — use that label exactly as given (don't invent your own). Use YYYY-MM-DD for birthdate. Leave a field blank if it's not present in the source file. Keep jersey_number and usa_lacrosse_number as plain text exactly as they appear in the source (e.g. "TBD" stays "TBD"; don't reformat long ID numbers).`;
+
+export default async function RostersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: errorMessage } = await searchParams;
   const supabase = await createClient();
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
@@ -64,6 +75,75 @@ export default async function RostersPage() {
           </p>
         </CollapsibleDetails>
       </div>
+
+      {errorMessage && (
+        <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          {errorMessage}
+        </p>
+      )}
+
+      {isDirector && tournament && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white px-5 py-4">
+          <CollapsibleDetails
+            summary="+ Bulk Import Rosters (multiple teams at once)"
+            summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
+          >
+            <p className="mt-3 text-sm text-slate-600">
+              Import rosters for multiple teams in one CSV by including a
+              &quot;team&quot; column. Paste this prompt into an AI tool
+              (along with the roster file(s)), then tell it which exact team
+              label from the list below applies to each file/section — it
+              needs that from you since it can&apos;t know your team
+              structure on its own.
+            </p>
+            <div className="mt-3 whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+              {REFORMAT_PROMPT_BULK}
+            </div>
+            <div className="mt-3">
+              <CopyButton text={REFORMAT_PROMPT_BULK} />
+            </div>
+            <p className="mt-3 text-xs text-slate-400">
+              Standard format: header row{" "}
+              <code className="rounded bg-slate-100 px-1 py-0.5">
+                team,first_name,last_name,jersey_number,birthdate,usa_lacrosse_number,email
+              </code>{" "}
+              with birthdate as YYYY-MM-DD. The &quot;team&quot; value must
+              match one of these exactly:
+            </p>
+            {teams.length > 0 && (
+              <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                {teams.map((t) => (
+                  <li key={t.id}>
+                    {teamImportLabel(
+                      t.name,
+                      t.associations?.name ?? "Unassociated",
+                      t.divisions?.name,
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <form
+              action={importRostersCsvBulk}
+              className="mt-4 flex items-center gap-2"
+            >
+              <input
+                name="csv_file"
+                type="file"
+                accept=".csv,text/csv"
+                required
+                className="block text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
+              />
+              <button
+                type="submit"
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Import
+              </button>
+            </form>
+          </CollapsibleDetails>
+        </div>
+      )}
 
       {!tournament && (
         <p className="mt-6 text-sm text-amber-700">
