@@ -57,9 +57,13 @@ export default async function BudgetPage() {
   const items = rawItems ?? [];
   const budgetCategories = rawCategories ?? [];
 
-  const totalForecast = items.reduce((sum, i) => sum + i.forecasted_amount, 0);
+  const netSign = (item: (typeof items)[number]) => (item.is_revenue ? 1 : -1);
+  const totalForecast = items.reduce(
+    (sum, i) => sum + netSign(i) * i.forecasted_amount,
+    0,
+  );
   const totalActual = items.reduce(
-    (sum, i) => sum + (i.actual_amount ?? 0),
+    (sum, i) => sum + netSign(i) * (i.actual_amount ?? 0),
     0,
   );
   const totalVariance = totalActual - totalForecast;
