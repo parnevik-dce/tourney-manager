@@ -12,10 +12,25 @@ export async function createDivision(formData: FormData) {
   const name = String(formData.get("name") ?? "");
   const skill_split = formData.get("skill_split") === "on";
 
+  const ageMatch = name.match(/\d+/);
+  let sort_order: number;
+  if (ageMatch) {
+    sort_order = parseInt(ageMatch[0], 10);
+  } else {
+    const { data: existing } = await supabase
+      .from("divisions")
+      .select("sort_order")
+      .eq("tournament_id", tournament.id)
+      .order("sort_order", { ascending: false })
+      .limit(1);
+    sort_order = (existing?.[0]?.sort_order ?? -1) + 1;
+  }
+
   const { error } = await supabase.from("divisions").insert({
     tournament_id: tournament.id,
     name,
     skill_split,
+    sort_order,
   });
 
   if (error) throw new Error(error.message);
