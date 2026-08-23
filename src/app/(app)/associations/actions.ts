@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentTournament } from "@/lib/tournament";
 import { getCurrentProfile } from "@/lib/profile";
+import { teamImportLabel } from "@/lib/team-name";
 
 export async function createAssociation(formData: FormData) {
   const supabase = await createClient();
@@ -454,6 +455,124 @@ export async function importRosterCsv(teamId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/associations/rosters");
+}
+
+const BULK_ROSTER_CSV_HEADERS = [
+  "team",
+  "first_name",
+  "last_name",
+  "jersey_number",
+  "birthdate",
+  "usa_lacrosse_number",
+  "email",
+] as const;
+
+export async function importRostersCsvBulk(formData: FormData) {
+  const profile = await getCurrentProfile();
+  if (profile?.role !== "director") throw new Error("Not authorized");
+
+  const tournament = await getCurrentTournament();
+  if (!tournament) throw new Error("No active tournament");
+
+  const file = formData.get("csv_file");
+  if (!(file instanceof File) || file.size === 0) return;
+
+  const text = await file.text();
+  const rows = parseCsv(text).filter((r) => r.some((c) => c.trim() !== ""));
+  if (rows.length < 2) return;
+
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const colIndex = Object.fromEntries(
+    BULK_ROSTER_CSV_HEADERS.map((h) => [h, header.indexOf(h)]),
+  );
+
+  const supabase = await createClient();
+
+  const { data: teams } = await supabase
+    .from("teams")
+    .select("*, associations(name), divisions(name)")
+    .eq("tournament_id", tournament.id);
+
+  const teamByLabel = new Map<string, string>();
+  const teamsByAssociation = new Map<string, string[]>();
+  for (const t of teams ?? []) {
+    const assocName = t.associations?.name ?? "";
+    const label = teamImportLabel(t.name, assocName, t.divisions?.name)
+      .toLowerCase()
+      .trim();
+    teamByLabel.set(label, t.id);
+    const assocKey = assocName.toLowerCase().trim();
+    const list = teamsByAssociation.get(assocKey) ?? [];
+    list.push(t.id);
+    teamsByAssociation.set(assocKey, list);
+  }
+
+  function buildPlayer(teamId: string, r: string[]) {
+    const first_name = r[colIndex.first_name]?.trim() || null;
+    const last_name = r[colIndex.last_name]?.trim() || null;
+    return {
+      team_id: teamId,
+      full_name: `${first_name ?? ""} ${last_name ?? ""}`.trim(),
+      first_name,
+      last_name,
+      jersey_number: r[colIndex.jersey_number]?.trim() || null,
+      birthdate: r[colIndex.birthdate]?.trim() || null,
+      usa_lacrosse_number: r[colIndex.usa_lacrosse_number]?.trim() || null,
+      email: r[colIndex.email]?.trim() || null,
+    };
+  }
+
+  const playersByTeam = new Map<string, ReturnType<typeof buildPlayer>[]>();
+  const unmatchedTeamValues = new Set<string>();
+
+  for (const r of rows.slice(1)) {
+    const teamValue = r[colIndex.team]?.trim();
+    if (!teamValue) continue;
+
+    const normalized = teamValue.toLowerCase();
+    let teamId = teamByLabel.get(normalized);
+    if (!teamId) {
+      const candidates = teamsByAssociation.get(normalized);
+      if (candidates?.length === 1) teamId = candidates[0];
+    }
+
+    if (!teamId) {
+      unmatchedTeamValues.add(teamValue);
+      continue;
+    }
+
+    const player = buildPlayer(teamId, r);
+    if (!player.first_name && !player.last_name) continue;
+
+    const list = playersByTeam.get(teamId) ?? [];
+    list.push(player);
+    playersByTeam.set(teamId, list);
+  }
+
+  const allPlayers = [...playersByTeam.values()].flat();
+  let imported = 0;
+
+  if (allPlayers.length) {
+    const { error } = await supabase.from("players").insert(allPlayers);
+    if (error) throw new Error(error.message);
+    imported = allPlayers.length;
+  }
+
+  revalidatePath("/associations/rosters");
+
+  const teamsImported = playersByTeam.size;
+  const messageParts = [
+    `Imported ${imported} player${imported === 1 ? "" : "s"} across ${teamsImported} team${teamsImported === 1 ? "" : "s"}.`,
+  ];
+  if (unmatchedTeamValues.size) {
+    messageParts.push(
+      `Skipped rows for unmatched team${unmatchedTeamValues.size === 1 ? "" : "s"}: ${[...unmatchedTeamValues].join(", ")}.`,
+    );
+  }
+
+  redirect(
+    `/associations/rosters?error=${encodeURIComponent(messageParts.join(" "))}`,
+  );
 }
 
 export async function deletePlayer(playerId: string) {
