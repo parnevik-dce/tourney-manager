@@ -13,6 +13,7 @@ import { StatusSelect } from "@/components/status-select";
 import { TextLink } from "@/components/text-link";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { CollapsibleDetails } from "@/components/collapsible-details";
+import { VendorsFilterBar } from "@/components/vendors-filter-bar";
 
 const TYPE_LABELS: Record<string, string> = {
   emt: "EMT / Medical",
@@ -39,15 +40,19 @@ const STATUS_BADGE: Record<string, string> = {
 export default async function VendorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; type?: string; status?: string }>;
 }) {
-  const { error: errorMessage } = await searchParams;
+  const {
+    error: errorMessage,
+    type: typeFilter = "",
+    status: statusFilter = "",
+  } = await searchParams;
   const supabase = await createClient();
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
   const isDirector = profile?.role === "director";
 
-  const { data: vendors } = await supabase
+  const { data: allVendors } = await supabase
     .from("vendors")
     .select("*, vendor_contacts(*)")
     .order("name");
@@ -62,6 +67,26 @@ export default async function VendorsPage({
   const statusByVendor = new Map(
     (rawStatuses ?? []).map((s) => [s.vendor_id, s.status]),
   );
+
+  const existingTypes = [
+    ...new Set((allVendors ?? []).map((v) => v.type)),
+  ].map((value) => ({ value, label: TYPE_LABELS[value] ?? value }));
+
+  const existingStatuses = [
+    ...new Set(
+      (allVendors ?? []).map(
+        (v) => statusByVendor.get(v.id) ?? "not_confirmed",
+      ),
+    ),
+  ].map((value) => ({ value, label: STATUS_LABELS[value] ?? value }));
+
+  const vendors = (allVendors ?? []).filter((v) => {
+    const status = statusByVendor.get(v.id) ?? "not_confirmed";
+    return (
+      (!typeFilter || v.type === typeFilter) &&
+      (!statusFilter || status === statusFilter)
+    );
+  });
 
   return (
     <div className="flex-1 px-8 py-8">
@@ -80,6 +105,19 @@ export default async function VendorsPage({
         <p className="mt-6 text-sm text-amber-700">
           No active tournament — commitment status is tracked per tournament
           year. Create one in Tournaments first.
+        </p>
+      )}
+
+      <VendorsFilterBar
+        types={existingTypes}
+        statuses={existingStatuses}
+        type={typeFilter}
+        status={statusFilter}
+      />
+      {(typeFilter || statusFilter) && (
+        <p className="mt-3 text-sm text-slate-500">
+          {vendors.length} {vendors.length === 1 ? "vendor matches" : "vendors match"}{" "}
+          the selected filters.
         </p>
       )}
 
@@ -258,7 +296,9 @@ export default async function VendorsPage({
           </table>
         ) : (
           <p className="px-5 py-6 text-center text-sm text-slate-500">
-            No vendors yet.
+            {typeFilter || statusFilter
+              ? "No vendors match."
+              : "No vendors yet."}
           </p>
         )}
       </div>
