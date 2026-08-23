@@ -1,9 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
-import { createTask, updateTaskStatus, loadStarterTasks } from "./actions";
+import {
+  createTask,
+  updateTask,
+  deleteTask,
+  updateTaskStatus,
+  loadStarterTasks,
+} from "./actions";
 import { StatusSelect } from "@/components/status-select";
 import { CollapsibleDetails } from "@/components/collapsible-details";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
 const PHASE_LABELS: Record<string, string> = {
   pre_season: "Pre-Season",
@@ -11,6 +18,48 @@ const PHASE_LABELS: Record<string, string> = {
   "30_days_out": "30 Days Out",
   tournament_week: "Tournament Week",
 };
+
+function DueDateFields({
+  defaultDueDate,
+}: {
+  defaultDueDate?: string | null;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-sm text-slate-700">Due date</p>
+      <div className="flex items-center gap-4 text-sm text-slate-600">
+        <label className="flex items-center gap-1.5">
+          <input
+            type="radio"
+            name="due_date_mode"
+            value="specific"
+            defaultChecked
+          />
+          Specific date
+        </label>
+        <label className="flex items-center gap-1.5">
+          <input type="radio" name="due_date_mode" value="before_tournament" />
+          Days before tournament
+        </label>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          name="due_date"
+          type="date"
+          defaultValue={defaultDueDate ?? ""}
+          className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+        />
+        <input
+          name="due_days_before"
+          type="number"
+          min="0"
+          placeholder="e.g. 30"
+          className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+        />
+      </div>
+    </div>
+  );
+}
 
 const COLUMNS = [
   { value: "todo", label: "To Do" },
@@ -77,9 +126,80 @@ export default async function TasksPage() {
                       key={task.id}
                       className="rounded-lg border border-slate-200 p-3"
                     >
-                      <p className="text-sm font-medium text-slate-900">
-                        {task.title}
-                      </p>
+                      {isDirector ? (
+                        <CollapsibleDetails
+                          summaryClassName="cursor-pointer text-sm font-medium text-slate-900 hover:text-blue-600 hover:underline"
+                          summary={task.title}
+                        >
+                          <div className="mt-3 space-y-3 border-t border-slate-100 pt-3">
+                            <form
+                              key={`${task.title}-${task.phase}-${task.due_date}-${task.assignee_id}`}
+                              action={updateTask.bind(null, task.id)}
+                              className="space-y-2"
+                            >
+                              <label className="block text-sm text-slate-700">
+                                Title
+                                <input
+                                  name="title"
+                                  defaultValue={task.title}
+                                  required
+                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                />
+                              </label>
+                              <label className="block text-sm text-slate-700">
+                                Phase
+                                <select
+                                  name="phase"
+                                  defaultValue={task.phase}
+                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                >
+                                  {Object.entries(PHASE_LABELS).map(
+                                    ([value, label]) => (
+                                      <option key={value} value={value}>
+                                        {label}
+                                      </option>
+                                    ),
+                                  )}
+                                </select>
+                              </label>
+                              <DueDateFields defaultDueDate={task.due_date} />
+                              <label className="block text-sm text-slate-700">
+                                Assignee
+                                <select
+                                  name="assignee_id"
+                                  defaultValue={task.assignee_id ?? ""}
+                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                >
+                                  <option value="">Unassigned</option>
+                                  {profiles.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.full_name ?? p.email}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <button
+                                type="submit"
+                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                              >
+                                Save
+                              </button>
+                            </form>
+                            <form action={deleteTask.bind(null, task.id)}>
+                              <ConfirmSubmitButton
+                                confirmText={`Delete task "${task.title}"?`}
+                                className="text-xs text-red-600 hover:underline"
+                              >
+                                Delete
+                              </ConfirmSubmitButton>
+                            </form>
+                          </div>
+                        </CollapsibleDetails>
+                      ) : (
+                        <p className="text-sm font-medium text-slate-900">
+                          {task.title}
+                        </p>
+                      )}
                       <span className="mt-2 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
                         {PHASE_LABELS[task.phase] ?? task.phase}
                       </span>
@@ -162,14 +282,9 @@ export default async function TasksPage() {
                 ))}
               </select>
             </label>
-            <label className="text-sm text-slate-700">
-              Due date
-              <input
-                name="due_date"
-                type="date"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              />
-            </label>
+            <div className="col-span-2">
+              <DueDateFields />
+            </div>
             <label className="col-span-2 text-sm text-slate-700">
               Assignee
               <select
