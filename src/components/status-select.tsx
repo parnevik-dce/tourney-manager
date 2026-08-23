@@ -10,7 +10,7 @@ export function StatusSelect({
   options: { value: string; label: string }[];
 }) {
   return (
-    <form action={action}>
+    <form action={action} onClick={(e) => e.stopPropagation()}>
       <select
         key={status}
         name="status"
