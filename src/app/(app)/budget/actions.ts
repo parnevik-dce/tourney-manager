@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentTournament } from "@/lib/tournament";
+import { getCurrentProfile } from "@/lib/profile";
 
 function parseAmount(value: FormDataEntryValue | null) {
   const str = String(value ?? "").trim();
@@ -204,6 +205,69 @@ export async function deleteBudgetCategory(categoryId: string) {
     .eq("id", categoryId);
 
   if (error) throw new Error(error.message);
+
+  revalidatePath("/budget");
+  revalidatePath("/budget/pnl");
+}
+
+export async function copyBudgetFromTournament(sourceTournamentId: string) {
+  const profile = await getCurrentProfile();
+  if (profile?.role !== "director") throw new Error("Not authorized");
+
+  const tournament = await getCurrentTournament();
+  if (!tournament) throw new Error("No active tournament");
+  if (tournament.id === sourceTournamentId) return;
+
+  const supabase = await createClient();
+
+  const [
+    { data: sourceCategories },
+    { data: sourceItems },
+    { data: existingCategories },
+  ] = await Promise.all([
+    supabase
+      .from("budget_categories")
+      .select("name, sort_order")
+      .eq("tournament_id", sourceTournamentId),
+    supabase
+      .from("budget_items")
+      .select("category, line_item, payee, forecasted_amount, is_revenue")
+      .eq("tournament_id", sourceTournamentId),
+    supabase
+      .from("budget_categories")
+      .select("name")
+      .eq("tournament_id", tournament.id),
+  ]);
+
+  const existingNames = new Set((existingCategories ?? []).map((c) => c.name));
+  const categoriesToInsert = (sourceCategories ?? [])
+    .filter((c) => !existingNames.has(c.name))
+    .map((c) => ({
+      tournament_id: tournament.id,
+      name: c.name,
+      sort_order: c.sort_order,
+    }));
+
+  if (categoriesToInsert.length) {
+    const { error } = await supabase
+      .from("budget_categories")
+      .insert(categoriesToInsert);
+    if (error) throw new Error(error.message);
+  }
+
+  const itemsToInsert = (sourceItems ?? []).map((i) => ({
+    tournament_id: tournament.id,
+    category: i.category,
+    line_item: i.line_item,
+    payee: i.payee,
+    forecasted_amount: i.forecasted_amount,
+    is_revenue: i.is_revenue,
+  }));
+
+  if (itemsToInsert.length) {
+    const { error } = await supabase.from("budget_items").insert(itemsToInsert);
+    if (error) throw new Error(error.message);
+  }
 
   revalidatePath("/budget");
   revalidatePath("/budget/pnl");

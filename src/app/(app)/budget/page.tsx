@@ -9,6 +9,7 @@ import {
   createBudgetCategory,
   updateBudgetCategory,
   deleteBudgetCategory,
+  copyBudgetFromTournament,
 } from "./actions";
 import { AmountInput } from "@/components/amount-input";
 import { CollapsibleDetails } from "@/components/collapsible-details";
@@ -57,6 +58,26 @@ export default async function BudgetPage() {
   const items = rawItems ?? [];
   const budgetCategories = rawCategories ?? [];
 
+  let copySource: { id: string; year: number; name: string } | null = null;
+  if (isDirector && tournament && items.length === 0) {
+    const { data: otherTournaments } = await supabase
+      .from("tournaments")
+      .select("id, year, name")
+      .neq("id", tournament.id)
+      .order("year", { ascending: false });
+
+    for (const t of otherTournaments ?? []) {
+      const { count } = await supabase
+        .from("budget_items")
+        .select("id", { count: "exact", head: true })
+        .eq("tournament_id", t.id);
+      if (count && count > 0) {
+        copySource = t;
+        break;
+      }
+    }
+  }
+
   const netSign = (item: (typeof items)[number]) => (item.is_revenue ? 1 : -1);
   const totalForecast = items.reduce(
     (sum, i) => sum + netSign(i) * i.forecasted_amount,
@@ -101,6 +122,24 @@ export default async function BudgetPage() {
           No active tournament — create one in Tournaments before tracking a
           budget.
         </p>
+      )}
+
+      {copySource && (
+        <div className="mt-6 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-5 py-4">
+          <p className="text-sm text-blue-900">
+            This tournament has no budget yet. Copy the {copySource.year}{" "}
+            budget (categories and forecasted amounts only — no actuals) as a
+            starting point?
+          </p>
+          <form action={copyBudgetFromTournament.bind(null, copySource.id)}>
+            <button
+              type="submit"
+              className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Copy budget from {copySource.year}
+            </button>
+          </form>
+        </div>
       )}
 
       {isDirector && tournament && (
