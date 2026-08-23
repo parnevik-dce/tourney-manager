@@ -78,16 +78,6 @@ export default async function BudgetPage() {
     }
   }
 
-  const netSign = (item: (typeof items)[number]) => (item.is_revenue ? 1 : -1);
-  const totalForecast = items.reduce(
-    (sum, i) => sum + netSign(i) * i.forecasted_amount,
-    0,
-  );
-  const totalActual = items.reduce(
-    (sum, i) => sum + netSign(i) * (i.actual_amount ?? 0),
-    0,
-  );
-  const totalVariance = totalActual - totalForecast;
 
   const revenueItems = items.filter((i) => i.is_revenue);
   const expenseItems = items.filter((i) => !i.is_revenue);
@@ -300,36 +290,7 @@ export default async function BudgetPage() {
       )}
 
       {tournament && (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-white p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Total Forecast
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">
-              {currency.format(totalForecast)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Total Actual
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">
-              {currency.format(totalActual)}
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Variance
-            </p>
-            <p className={`mt-2 text-2xl font-semibold ${varianceColor(totalVariance)}`}>
-              {formatVariance(totalVariance)}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {tournament && (
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-slate-200 bg-white p-5">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Total Revenue
