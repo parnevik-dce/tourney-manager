@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { teamDisplayName } from "@/lib/team-name";
+import { teamAssociationLabel } from "@/lib/team-name";
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -128,12 +128,11 @@ export default async function PublicSitePage({
           </h2>
           <div className="mt-4 grid grid-cols-2 gap-4">
             {divisions.map((d) => {
-              const divTeams = (teams ?? []).filter(
-                (t) => t.division_id === d.id,
+              const registeredTeams = (teams ?? []).filter(
+                (t) =>
+                  t.division_id === d.id &&
+                  t.registration_status === "registered",
               );
-              const registered = divTeams.filter(
-                (t) => t.registration_status === "registered",
-              ).length;
               return (
                 <div
                   key={d.id}
@@ -142,17 +141,21 @@ export default async function PublicSitePage({
                   <p className="text-sm font-semibold text-slate-900">
                     {d.name}
                   </p>
-                  <p className="text-xs text-slate-500">
-                    {registered} of {divTeams.length} teams registered
-                  </p>
-                  {divTeams.length > 0 && (
+                  {registeredTeams.length > 0 ? (
                     <ul className="mt-2 space-y-0.5 text-xs text-slate-500">
-                      {divTeams.map((t) => (
+                      {registeredTeams.map((t) => (
                         <li key={t.id}>
-                          {teamDisplayName(t.name, t.associations?.name ?? "Team")}
+                          {teamAssociationLabel(
+                            t.name,
+                            t.associations?.name ?? "Team",
+                          )}
                         </li>
                       ))}
                     </ul>
+                  ) : (
+                    <p className="mt-2 text-xs text-slate-400">
+                      No teams registered yet.
+                    </p>
                   )}
                 </div>
               );
