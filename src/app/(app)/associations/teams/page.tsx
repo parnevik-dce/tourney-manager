@@ -12,7 +12,8 @@ import {
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
-import { teamDisplayName } from "@/lib/team-name";
+import { TeamsFilterBar } from "@/components/teams-filter-bar";
+import { teamAssociationLabel } from "@/lib/team-name";
 
 type Contact = {
   id: string;
@@ -22,7 +23,26 @@ type Contact = {
   email: string | null;
 };
 
-export default async function TeamsListPage() {
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  registered: "Registered",
+  dropped: "Dropped",
+};
+
+export default async function TeamsListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    association?: string;
+    division?: string;
+    status?: string;
+  }>;
+}) {
+  const {
+    association: associationFilter = "",
+    division: divisionFilter = "",
+    status: statusFilter = "",
+  } = await searchParams;
   const supabase = await createClient();
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
@@ -47,9 +67,26 @@ export default async function TeamsListPage() {
         ])
       : [{ data: null }, { data: null }, { data: null }];
 
-  const teams = rawTeams ?? [];
+  const allTeams = rawTeams ?? [];
   const divisions = rawDivisions ?? [];
   const associations = rawAssociations ?? [];
+
+  const existingAssociations = associations.filter((a) =>
+    allTeams.some((t) => t.association_id === a.id),
+  );
+  const existingDivisions = divisions.filter((d) =>
+    allTeams.some((t) => t.division_id === d.id),
+  );
+  const existingStatuses = [
+    ...new Set(allTeams.map((t) => t.registration_status)),
+  ].map((value) => ({ value, label: STATUS_LABELS[value] ?? value }));
+
+  const teams = allTeams.filter(
+    (t) =>
+      (!associationFilter || t.association_id === associationFilter) &&
+      (!divisionFilter || t.division_id === divisionFilter) &&
+      (!statusFilter || t.registration_status === statusFilter),
+  );
 
   return (
     <div className="flex-1 px-8 py-8">
@@ -120,6 +157,7 @@ export default async function TeamsListPage() {
                 >
                   <option value="pending">Pending</option>
                   <option value="registered">Registered</option>
+                  <option value="dropped">Dropped</option>
                 </select>
               </label>
               <p className="col-span-2 text-xs text-slate-400">
@@ -167,12 +205,30 @@ export default async function TeamsListPage() {
       )}
 
       {tournament && (
+        <>
+          <TeamsFilterBar
+            associations={existingAssociations}
+            divisions={existingDivisions}
+            statuses={existingStatuses}
+            association={associationFilter}
+            division={divisionFilter}
+            status={statusFilter}
+          />
+          {(associationFilter || divisionFilter || statusFilter) && (
+            <p className="mt-3 text-sm text-slate-500">
+              {teams.length} {teams.length === 1 ? "team matches" : "teams match"}{" "}
+              the selected filters.
+            </p>
+          )}
+        </>
+      )}
+
+      {tournament && (
         <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
           {teams.length ? (
-            <div className="min-w-[720px] text-sm">
-              <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
+            <div className="min-w-[640px] text-sm">
+              <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
                 <span>Team</span>
-                <span>Association</span>
                 <span>Division</span>
                 <span>Status</span>
                 <span>Players</span>
@@ -182,28 +238,25 @@ export default async function TeamsListPage() {
               <div className="divide-y divide-slate-50">
                 {teams.map((team) => {
                   const contacts: Contact[] = team.team_contacts ?? [];
-                  const displayName = teamDisplayName(
+                  const displayName = teamAssociationLabel(
                     team.name,
                     team.associations?.name ?? "Unassociated",
-                    team.divisions?.name,
                   );
                   return (
                     <CollapsibleDetails
                       key={team.id}
-                      summaryClassName="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                      summaryClassName="grid grid-cols-[3fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
                       summary={
                         <>
                           <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
                             {displayName}
                           </span>
                           <span className="text-slate-500">
-                            {team.associations?.name ?? "—"}
-                          </span>
-                          <span className="text-slate-500">
                             {team.divisions?.name ?? "—"}
                           </span>
                           <span className="capitalize text-slate-700">
-                            {team.registration_status}
+                            {STATUS_LABELS[team.registration_status] ??
+                              team.registration_status}
                           </span>
                           <span className="text-slate-500">
                             {team.players?.length ?? 0}
@@ -269,6 +322,7 @@ export default async function TeamsListPage() {
                                 <option value="registered">
                                   Registered
                                 </option>
+                                <option value="dropped">Dropped</option>
                               </select>
                             </label>
                             <button
@@ -391,7 +445,9 @@ export default async function TeamsListPage() {
             </div>
           ) : (
             <p className="px-5 py-6 text-center text-sm text-slate-500">
-              No teams yet.
+              {associationFilter || divisionFilter || statusFilter
+                ? "No teams match."
+                : "No teams yet."}
             </p>
           )}
         </div>
