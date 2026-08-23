@@ -270,9 +270,9 @@ export default async function BudgetPage() {
         <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
           {items.length ? (
             <div className="min-w-[820px] text-sm">
-              <div className="grid grid-cols-[2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
-                <span>Item</span>
+              <div className="grid grid-cols-[1fr_2fr_1fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
                 <span>Category</span>
+                <span>Item</span>
                 <span>Payee</span>
                 <span className="text-right">Forecast</span>
                 <span className="text-right">Actual</span>
@@ -286,9 +286,12 @@ export default async function BudgetPage() {
                   return (
                     <CollapsibleDetails
                       key={item.id}
-                      summaryClassName="grid grid-cols-[2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                      summaryClassName="grid grid-cols-[1fr_2fr_1fr_0.8fr_0.8fr_0.8fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
                       summary={
                         <>
+                          <span className="text-slate-500">
+                            {item.category}
+                          </span>
                           <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
                             {item.line_item ?? "—"}
                             {item.is_revenue && (
@@ -306,9 +309,6 @@ export default async function BudgetPage() {
                                 Receipt
                               </a>
                             )}
-                          </span>
-                          <span className="text-slate-500">
-                            {item.category}
                           </span>
                           <span className="text-slate-500">
                             {item.payee ?? "—"}
