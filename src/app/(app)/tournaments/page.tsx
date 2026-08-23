@@ -8,7 +8,7 @@ import {
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { LogoUploadForm } from "@/components/logo-upload-form";
 
-const STATUS_OPTIONS = ["active", "closed", "archived"];
+const STATUS_OPTIONS = ["active", "inactive"];
 
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);

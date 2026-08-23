@@ -25,12 +25,22 @@ export async function createTournament(formData: FormData) {
       end_date,
       location,
       public_slug,
+      status: "active",
     })
     .select()
     .single();
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  const { error: deactivateError } = await supabase
+    .from("tournaments")
+    .update({ status: "inactive" })
+    .neq("id", tournament.id);
+
+  if (deactivateError) {
+    throw new Error(deactivateError.message);
   }
 
   const { error: divisionsError } = await supabase.from("divisions").insert(
@@ -108,7 +118,19 @@ export async function updateTournament(tournamentId: string, formData: FormData)
     throw new Error(error.message);
   }
 
+  if (status === "active") {
+    const { error: deactivateError } = await supabase
+      .from("tournaments")
+      .update({ status: "inactive" })
+      .neq("id", tournamentId);
+
+    if (deactivateError) {
+      throw new Error(deactivateError.message);
+    }
+  }
+
   revalidatePath("/tournaments");
+  revalidatePath("/");
 }
 
 export async function uploadTournamentLogo(
