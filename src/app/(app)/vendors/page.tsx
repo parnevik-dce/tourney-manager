@@ -14,6 +14,8 @@ import { TextLink } from "@/components/text-link";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { VendorsFilterBar } from "@/components/vendors-filter-bar";
+import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { sendBulkEmail } from "@/lib/communications-actions";
 
 const TYPE_LABELS: Record<string, string> = {
   emt: "EMT / Medical",
@@ -106,6 +108,22 @@ export default async function VendorsPage({
           No active tournament — commitment status is tracked per tournament
           year. Create one in Tournaments first.
         </p>
+      )}
+
+      {isDirector && (
+        <div className="mt-6">
+          <BulkEmailComposer
+            triggerLabel="Email All Vendors"
+            groups={(allVendors ?? []).map((v) => ({
+              id: v.id,
+              label: v.name,
+              emails: (v.vendor_contacts ?? [])
+                .map((c: { email: string | null }) => c.email)
+                .filter((e: string | null): e is string => Boolean(e)),
+            }))}
+            action={sendBulkEmail}
+          />
+        </div>
       )}
 
       <VendorsFilterBar

@@ -14,6 +14,8 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { TeamsFilterBar } from "@/components/teams-filter-bar";
 import { teamAssociationLabel } from "@/lib/team-name";
+import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { sendBulkEmail } from "@/lib/communications-actions";
 
 type Contact = {
   id: string;
@@ -106,7 +108,26 @@ export default async function TeamsListPage({
       )}
 
       {isDirector && tournament && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
+        <div className="mt-6">
+          <BulkEmailComposer
+            triggerLabel="Email All Teams"
+            groups={allTeams.map((t) => ({
+              id: t.id,
+              label: teamAssociationLabel(
+                t.name,
+                t.associations?.name ?? "Unassociated",
+              ),
+              emails: (t.team_contacts ?? [])
+                .map((c: Contact) => c.email)
+                .filter((e: string | null): e is string => Boolean(e)),
+            }))}
+            action={sendBulkEmail}
+          />
+        </div>
+      )}
+
+      {isDirector && tournament && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white px-5 py-4">
           <CollapsibleDetails
             summary="+ Add Team"
             summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"

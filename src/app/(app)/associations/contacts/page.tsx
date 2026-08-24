@@ -14,6 +14,8 @@ import { TextLink } from "@/components/text-link";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { ContactsFilterBar } from "@/components/contacts-filter-bar";
 import { teamDisplayName } from "@/lib/team-name";
+import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { sendBulkEmail } from "@/lib/communications-actions";
 
 type UnifiedContact = {
   id: string;
@@ -130,7 +132,23 @@ export default async function ContactsPage({
       )}
 
       {isDirector && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
+        <div className="mt-6">
+          <BulkEmailComposer
+            triggerLabel="Email All Contacts"
+            groups={filtered
+              .filter((c) => c.email)
+              .map((c) => ({
+                id: `${c.kind}-${c.id}`,
+                label: `${c.name} (${c.belongsTo})`,
+                emails: [c.email as string],
+              }))}
+            action={sendBulkEmail}
+          />
+        </div>
+      )}
+
+      {isDirector && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white px-5 py-4">
           <CollapsibleDetails
             summary="+ Add Contact"
             summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
