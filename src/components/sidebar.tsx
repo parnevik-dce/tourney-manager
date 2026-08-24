@@ -14,6 +14,8 @@ const NAV_ITEMS = [
   { href: "/fields", label: "Fields & Divisions" },
 ];
 
+const DIRECTOR_NAV_ITEMS = [{ href: "/settings", label: "Settings" }];
+
 type Tournament = {
   id: string;
   name: string;
@@ -100,25 +102,27 @@ export function Sidebar({
       </Link>
 
       <nav className="flex-1 space-y-0.5 px-3 py-4">
-        {NAV_ITEMS.map((item) => {
-          const active =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`block rounded-md px-3 py-2 text-sm font-medium ${
-                active
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        {[...NAV_ITEMS, ...(isDirector ? DIRECTOR_NAV_ITEMS : [])].map(
+          (item) => {
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`block rounded-md px-3 py-2 text-sm font-medium ${
+                  active
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          },
+        )}
       </nav>
 
       {tournament && (

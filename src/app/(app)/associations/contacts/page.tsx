@@ -16,6 +16,7 @@ import { ContactsFilterBar } from "@/components/contacts-filter-bar";
 import { teamDisplayName } from "@/lib/team-name";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
 import { sendBulkEmail } from "@/lib/communications-actions";
+import { isGmailConnected } from "@/lib/mail";
 
 type UnifiedContact = {
   id: string;
@@ -42,6 +43,7 @@ export default async function ContactsPage({
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
   const isDirector = profile?.role === "director";
+  const gmailConnected = await isGmailConnected();
 
   const { data: associations } = await supabase
     .from("associations")
@@ -133,17 +135,27 @@ export default async function ContactsPage({
 
       {isDirector && (
         <div className="mt-6">
-          <BulkEmailComposer
-            triggerLabel="Email All Contacts"
-            groups={filtered
-              .filter((c) => c.email)
-              .map((c) => ({
-                id: `${c.kind}-${c.id}`,
-                label: `${c.name} (${c.belongsTo})`,
-                emails: [c.email as string],
-              }))}
-            action={sendBulkEmail}
-          />
+          {gmailConnected ? (
+            <BulkEmailComposer
+              triggerLabel="Email All Contacts"
+              groups={filtered
+                .filter((c) => c.email)
+                .map((c) => ({
+                  id: `${c.kind}-${c.id}`,
+                  label: `${c.name} (${c.belongsTo})`,
+                  emails: [c.email as string],
+                }))}
+              action={sendBulkEmail}
+            />
+          ) : (
+            <p className="text-sm text-amber-700">
+              Gmail not connected —{" "}
+              <a href="/settings" className="underline">
+                connect an account
+              </a>{" "}
+              to enable bulk email.
+            </p>
+          )}
         </div>
       )}
 

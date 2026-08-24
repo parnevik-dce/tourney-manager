@@ -16,6 +16,7 @@ import { TeamsFilterBar } from "@/components/teams-filter-bar";
 import { teamAssociationLabel } from "@/lib/team-name";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
 import { sendBulkEmail } from "@/lib/communications-actions";
+import { isGmailConnected } from "@/lib/mail";
 
 type Contact = {
   id: string;
@@ -49,6 +50,7 @@ export default async function TeamsListPage({
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
   const isDirector = profile?.role === "director";
+  const gmailConnected = await isGmailConnected();
 
   const [{ data: rawTeams }, { data: rawDivisions }, { data: rawAssociations }] =
     tournament
@@ -109,20 +111,30 @@ export default async function TeamsListPage({
 
       {isDirector && tournament && (
         <div className="mt-6">
-          <BulkEmailComposer
-            triggerLabel="Email All Teams"
-            groups={allTeams.map((t) => ({
-              id: t.id,
-              label: teamAssociationLabel(
-                t.name,
-                t.associations?.name ?? "Unassociated",
-              ),
-              emails: (t.team_contacts ?? [])
-                .map((c: Contact) => c.email)
-                .filter((e: string | null): e is string => Boolean(e)),
-            }))}
-            action={sendBulkEmail}
-          />
+          {gmailConnected ? (
+            <BulkEmailComposer
+              triggerLabel="Email All Teams"
+              groups={allTeams.map((t) => ({
+                id: t.id,
+                label: teamAssociationLabel(
+                  t.name,
+                  t.associations?.name ?? "Unassociated",
+                ),
+                emails: (t.team_contacts ?? [])
+                  .map((c: Contact) => c.email)
+                  .filter((e: string | null): e is string => Boolean(e)),
+              }))}
+              action={sendBulkEmail}
+            />
+          ) : (
+            <p className="text-sm text-amber-700">
+              Gmail not connected —{" "}
+              <a href="/settings" className="underline">
+                connect an account
+              </a>{" "}
+              to enable bulk email.
+            </p>
+          )}
         </div>
       )}
 
