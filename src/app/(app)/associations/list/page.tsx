@@ -12,6 +12,8 @@ import {
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
+import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { sendBulkEmail } from "@/lib/communications-actions";
 
 type Contact = {
   id: string;
@@ -54,7 +56,23 @@ export default async function AssociationsListPage({
       )}
 
       {isDirector && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-5 py-4">
+        <div className="mt-6">
+          <BulkEmailComposer
+            triggerLabel="Email All Associations"
+            groups={(associations ?? []).map((a) => ({
+              id: a.id,
+              label: a.name,
+              emails: (a.association_contacts ?? [])
+                .map((c: Contact) => c.email)
+                .filter((e: string | null): e is string => Boolean(e)),
+            }))}
+            action={sendBulkEmail}
+          />
+        </div>
+      )}
+
+      {isDirector && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-white px-5 py-4">
           <CollapsibleDetails
             summary="+ Add Association"
             summaryClassName="cursor-pointer text-sm font-semibold text-slate-900"
