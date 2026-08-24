@@ -55,30 +55,6 @@ export async function createTournament(formData: FormData) {
     throw new Error(divisionsError.message);
   }
 
-  const { data: templates, error: templatesError } = await supabase
-    .from("task_templates")
-    .select("*")
-    .order("sort_order");
-
-  if (templatesError) {
-    throw new Error(templatesError.message);
-  }
-
-  if (templates?.length) {
-    const { error: tasksError } = await supabase.from("tasks").insert(
-      templates.map((t) => ({
-        tournament_id: tournament.id,
-        title: t.title,
-        phase: t.phase,
-        sort_order: t.sort_order,
-      })),
-    );
-
-    if (tasksError) {
-      throw new Error(tasksError.message);
-    }
-  }
-
   const { error: siteSettingsError } = await supabase
     .from("site_settings")
     .insert({ tournament_id: tournament.id });
