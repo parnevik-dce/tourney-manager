@@ -6,12 +6,13 @@ import {
   updateTask,
   deleteTask,
   updateTaskStatus,
-  loadStarterTasks,
+  copyMasterTasks,
 } from "./actions";
 import { StatusSelect } from "@/components/status-select";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { TasksFilterBar } from "@/components/tasks-filter-bar";
+import { CopyMasterTasksModal } from "@/components/copy-master-tasks-modal";
 
 const PHASE_LABELS: Record<string, string> = {
   pre_season: "Pre-Season",
@@ -92,6 +93,28 @@ export default async function TasksPage({
   const allTasks = rawTasks ?? [];
   const profiles = rawProfiles ?? [];
 
+  let masterTaskSources: { id: string; year: number; name: string }[] = [];
+  if (isDirector && tournament && allTasks.length === 0) {
+    const { data: masterTaskRows } = await supabase
+      .from("tasks")
+      .select("tournament_id")
+      .eq("is_master_task", true)
+      .neq("tournament_id", tournament.id);
+
+    const sourceIds = [
+      ...new Set((masterTaskRows ?? []).map((t) => t.tournament_id)),
+    ];
+
+    if (sourceIds.length) {
+      const { data: sourceTournaments } = await supabase
+        .from("tournaments")
+        .select("id, year, name")
+        .in("id", sourceIds)
+        .order("year", { ascending: false });
+      masterTaskSources = sourceTournaments ?? [];
+    }
+  }
+
   const sortedTasks = [...allTasks].sort((a, b) => {
     if (!a.due_date && !b.due_date) return 0;
     if (!a.due_date) return 1;
@@ -168,6 +191,10 @@ export default async function TasksPage({
                 ))}
               </select>
             </label>
+            <label className="col-span-2 flex items-center gap-1.5 text-sm text-slate-700">
+              <input type="checkbox" name="is_master_task" />
+              Master Task (reusable in future tournaments)
+            </label>
             <button
               type="submit"
               className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
@@ -179,14 +206,12 @@ export default async function TasksPage({
       )}
 
       {isDirector && tournament && !allTasks.length && (
-        <form action={loadStarterTasks} className="mt-4">
-          <button
-            type="submit"
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Load starter tasks
-          </button>
-        </form>
+        <div className="mt-4">
+          <CopyMasterTasksModal
+            tournaments={masterTaskSources}
+            action={copyMasterTasks}
+          />
+        </div>
       )}
 
       {tournament && (
@@ -230,10 +255,20 @@ export default async function TasksPage({
                           {canEdit ? (
                             <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
                               {task.title}
+                              {task.is_master_task && (
+                                <span className="ml-2 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                                  Master
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <span className="font-medium text-slate-900">
                               {task.title}
+                              {task.is_master_task && (
+                                <span className="ml-2 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                                  Master
+                                </span>
+                              )}
                             </span>
                           )}
                           <span className="text-slate-500">
@@ -264,7 +299,7 @@ export default async function TasksPage({
                       {canEdit && (
                         <div className="grid grid-cols-2 gap-4 border-t border-slate-100 px-5 py-4">
                           <form
-                            key={`${task.title}-${task.phase}-${task.due_date}-${task.assignee_id}`}
+                            key={`${task.title}-${task.phase}-${task.due_date}-${task.assignee_id}-${task.is_master_task}`}
                             action={updateTask.bind(null, task.id)}
                             className="space-y-2"
                           >
@@ -308,6 +343,14 @@ export default async function TasksPage({
                                   </option>
                                 ))}
                               </select>
+                            </label>
+                            <label className="flex items-center gap-1.5 text-sm text-slate-700">
+                              <input
+                                type="checkbox"
+                                name="is_master_task"
+                                defaultChecked={task.is_master_task}
+                              />
+                              Master Task
                             </label>
                             <button
                               type="submit"
