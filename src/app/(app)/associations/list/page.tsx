@@ -14,6 +14,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
 import { sendBulkEmail } from "@/lib/communications-actions";
+import { isGmailConnected } from "@/lib/mail";
 
 type Contact = {
   id: string;
@@ -38,6 +39,8 @@ export default async function AssociationsListPage({
     .select("*, association_contacts(*), teams(id)")
     .order("name");
 
+  const gmailConnected = await isGmailConnected();
+
   return (
     <div className="flex-1 px-8 py-8">
       <h1 className="font-display text-2xl font-bold text-slate-900">
@@ -57,17 +60,27 @@ export default async function AssociationsListPage({
 
       {isDirector && (
         <div className="mt-6">
-          <BulkEmailComposer
-            triggerLabel="Email All Associations"
-            groups={(associations ?? []).map((a) => ({
-              id: a.id,
-              label: a.name,
-              emails: (a.association_contacts ?? [])
-                .map((c: Contact) => c.email)
-                .filter((e: string | null): e is string => Boolean(e)),
-            }))}
-            action={sendBulkEmail}
-          />
+          {gmailConnected ? (
+            <BulkEmailComposer
+              triggerLabel="Email All Associations"
+              groups={(associations ?? []).map((a) => ({
+                id: a.id,
+                label: a.name,
+                emails: (a.association_contacts ?? [])
+                  .map((c: Contact) => c.email)
+                  .filter((e: string | null): e is string => Boolean(e)),
+              }))}
+              action={sendBulkEmail}
+            />
+          ) : (
+            <p className="text-sm text-amber-700">
+              Gmail not connected —{" "}
+              <a href="/settings" className="underline">
+                connect an account
+              </a>{" "}
+              to enable bulk email.
+            </p>
+          )}
         </div>
       )}
 

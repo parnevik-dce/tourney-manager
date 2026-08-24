@@ -1,22 +1,26 @@
 import nodemailer from "nodemailer";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-function getTransporter() {
-  const user = process.env.GMAIL_ADDRESS;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) {
-    throw new Error(
-      "Gmail is not connected — set GMAIL_ADDRESS and GMAIL_APP_PASSWORD.",
-    );
-  }
+async function getGmailConnection() {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("gmail_connection")
+    .select("email, app_password")
+    .order("connected_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: { user, pass },
-  });
+  return data;
 }
 
-export function isGmailConnected() {
-  return Boolean(process.env.GMAIL_ADDRESS && process.env.GMAIL_APP_PASSWORD);
+export async function isGmailConnected() {
+  const connection = await getGmailConnection();
+  return Boolean(connection);
+}
+
+export async function getConnectedGmailAddress() {
+  const connection = await getGmailConnection();
+  return connection?.email ?? null;
 }
 
 export async function sendBulkBccEmail({
@@ -28,20 +32,24 @@ export async function sendBulkBccEmail({
   subject: string;
   text: string;
 }) {
-  const from = process.env.GMAIL_ADDRESS;
-  if (!from) {
+  const connection = await getGmailConnection();
+  if (!connection) {
     throw new Error(
-      "Gmail is not connected — set GMAIL_ADDRESS and GMAIL_APP_PASSWORD.",
+      "Gmail is not connected — connect an account on the Settings page.",
     );
   }
   if (!bcc.length) {
     throw new Error("No recipients selected.");
   }
 
-  const transporter = getTransporter();
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: connection.email, pass: connection.app_password },
+  });
+
   await transporter.sendMail({
-    from,
-    to: from,
+    from: connection.email,
+    to: connection.email,
     bcc,
     subject,
     text,

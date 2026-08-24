@@ -16,6 +16,7 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 import { VendorsFilterBar } from "@/components/vendors-filter-bar";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
 import { sendBulkEmail } from "@/lib/communications-actions";
+import { isGmailConnected } from "@/lib/mail";
 
 const TYPE_LABELS: Record<string, string> = {
   emt: "EMT / Medical",
@@ -53,6 +54,7 @@ export default async function VendorsPage({
   const profile = await getCurrentProfile();
   const tournament = await getCurrentTournament();
   const isDirector = profile?.role === "director";
+  const gmailConnected = await isGmailConnected();
 
   const { data: allVendors } = await supabase
     .from("vendors")
@@ -112,17 +114,27 @@ export default async function VendorsPage({
 
       {isDirector && (
         <div className="mt-6">
-          <BulkEmailComposer
-            triggerLabel="Email All Vendors"
-            groups={(allVendors ?? []).map((v) => ({
-              id: v.id,
-              label: v.name,
-              emails: (v.vendor_contacts ?? [])
-                .map((c: { email: string | null }) => c.email)
-                .filter((e: string | null): e is string => Boolean(e)),
-            }))}
-            action={sendBulkEmail}
-          />
+          {gmailConnected ? (
+            <BulkEmailComposer
+              triggerLabel="Email All Vendors"
+              groups={(allVendors ?? []).map((v) => ({
+                id: v.id,
+                label: v.name,
+                emails: (v.vendor_contacts ?? [])
+                  .map((c: { email: string | null }) => c.email)
+                  .filter((e: string | null): e is string => Boolean(e)),
+              }))}
+              action={sendBulkEmail}
+            />
+          ) : (
+            <p className="text-sm text-amber-700">
+              Gmail not connected —{" "}
+              <a href="/settings" className="underline">
+                connect an account
+              </a>{" "}
+              to enable bulk email.
+            </p>
+          )}
         </div>
       )}
 
