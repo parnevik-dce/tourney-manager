@@ -29,18 +29,19 @@ export async function createTask(formData: FormData) {
   if (!tournament) throw new Error("No active tournament");
 
   const title = String(formData.get("title") ?? "");
-  const phase = String(formData.get("phase") || "pre_season");
   const due_date = resolveDueDate(formData, tournament.start_date);
+  if (!due_date) throw new Error("Due date is required");
   const assignee_id = String(formData.get("assignee_id") || "") || null;
   const is_master_task = formData.get("is_master_task") === "on";
 
   const { error } = await supabase.from("tasks").insert({
     tournament_id: tournament.id,
     title,
-    phase,
     due_date,
     assignee_id,
     is_master_task,
+    // phase is a NOT NULL legacy column the UI no longer exposes; write a placeholder.
+    phase: "pre_season",
   });
 
   if (error) throw new Error(error.message);
@@ -53,14 +54,14 @@ export async function updateTask(taskId: string, formData: FormData) {
   const tournament = await getCurrentTournament();
 
   const title = String(formData.get("title") ?? "");
-  const phase = String(formData.get("phase") || "pre_season");
   const due_date = resolveDueDate(formData, tournament?.start_date ?? null);
+  if (!due_date) throw new Error("Due date is required");
   const assignee_id = String(formData.get("assignee_id") || "") || null;
   const is_master_task = formData.get("is_master_task") === "on";
 
   const { error } = await supabase
     .from("tasks")
-    .update({ title, phase, due_date, assignee_id, is_master_task })
+    .update({ title, due_date, assignee_id, is_master_task })
     .eq("id", taskId);
 
   if (error) throw new Error(error.message);
@@ -127,7 +128,7 @@ export async function copyMasterTasks(sourceTournamentId: string) {
         .single(),
       supabase
         .from("tasks")
-        .select("title, phase, due_date")
+        .select("title, due_date")
         .eq("tournament_id", sourceTournamentId)
         .eq("is_master_task", true),
     ]);
@@ -143,9 +144,9 @@ export async function copyMasterTasks(sourceTournamentId: string) {
     return {
       tournament_id: tournament.id,
       title: t.title,
-      phase: t.phase,
       due_date,
       is_master_task: true,
+      phase: "pre_season",
     };
   });
 

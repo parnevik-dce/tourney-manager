@@ -13,13 +13,7 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { TasksFilterBar } from "@/components/tasks-filter-bar";
 import { CopyMasterTasksModal } from "@/components/copy-master-tasks-modal";
-
-const PHASE_LABELS: Record<string, string> = {
-  pre_season: "Pre-Season",
-  "60_days_out": "60 Days Out",
-  "30_days_out": "30 Days Out",
-  tournament_week: "Tournament Week",
-};
+import { DueDateFields } from "@/components/due-date-fields";
 
 const COLUMNS = [
   { value: "todo", label: "To Do" },
@@ -27,46 +21,13 @@ const COLUMNS = [
   { value: "done", label: "Done" },
 ];
 
-function DueDateFields({
-  defaultDueDate,
-}: {
-  defaultDueDate?: string | null;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <p className="text-sm text-slate-700">Due date</p>
-      <div className="flex items-center gap-4 text-sm text-slate-600">
-        <label className="flex items-center gap-1.5">
-          <input
-            type="radio"
-            name="due_date_mode"
-            value="specific"
-            defaultChecked
-          />
-          Specific date
-        </label>
-        <label className="flex items-center gap-1.5">
-          <input type="radio" name="due_date_mode" value="before_tournament" />
-          Days before tournament
-        </label>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="due_date"
-          type="date"
-          defaultValue={defaultDueDate ?? ""}
-          className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-        />
-        <input
-          name="due_days_before"
-          type="number"
-          min="0"
-          placeholder="e.g. 30"
-          className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-        />
-      </div>
-    </div>
+function defaultNewTaskDueDate(): string {
+  const now = new Date();
+  const date = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   );
+  date.setUTCDate(date.getUTCDate() + 7);
+  return date.toISOString().slice(0, 10);
 }
 
 export default async function TasksPage({
@@ -161,21 +122,8 @@ export default async function TasksPage({
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
               />
             </label>
-            <label className="text-sm text-slate-700">
-              Phase
-              <select
-                name="phase"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-              >
-                {Object.entries(PHASE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
             <div className="col-span-2">
-              <DueDateFields />
+              <DueDateFields defaultDueDate={defaultNewTaskDueDate()} />
             </div>
             <label className="col-span-2 text-sm text-slate-700">
               Assignee
@@ -230,9 +178,8 @@ export default async function TasksPage({
         <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
           {tasks.length ? (
             <div className="min-w-[720px] text-sm">
-              <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
+              <div className="grid grid-cols-[3fr_1fr_1fr_1fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
                 <span>Task</span>
-                <span>Phase</span>
                 <span>Assignee</span>
                 <span>Due Date</span>
                 <span>Status</span>
@@ -249,7 +196,7 @@ export default async function TasksPage({
                   return (
                     <CollapsibleDetails
                       key={task.id}
-                      summaryClassName="grid grid-cols-[3fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                      summaryClassName="grid grid-cols-[3fr_1fr_1fr_1fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
                       summary={
                         <>
                           {canEdit ? (
@@ -271,9 +218,6 @@ export default async function TasksPage({
                               )}
                             </span>
                           )}
-                          <span className="text-slate-500">
-                            {PHASE_LABELS[task.phase] ?? task.phase}
-                          </span>
                           <span className="text-slate-500">
                             {assigneeName}
                           </span>
@@ -299,7 +243,7 @@ export default async function TasksPage({
                       {canEdit && (
                         <div className="grid grid-cols-2 gap-4 border-t border-slate-100 px-5 py-4">
                           <form
-                            key={`${task.title}-${task.phase}-${task.due_date}-${task.assignee_id}-${task.is_master_task}`}
+                            key={`${task.title}-${task.due_date}-${task.assignee_id}-${task.is_master_task}`}
                             action={updateTask.bind(null, task.id)}
                             className="space-y-2"
                           >
@@ -311,22 +255,6 @@ export default async function TasksPage({
                                 required
                                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                               />
-                            </label>
-                            <label className="block text-sm text-slate-700">
-                              Phase
-                              <select
-                                name="phase"
-                                defaultValue={task.phase}
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                              >
-                                {Object.entries(PHASE_LABELS).map(
-                                  ([value, label]) => (
-                                    <option key={value} value={value}>
-                                      {label}
-                                    </option>
-                                  ),
-                                )}
-                              </select>
                             </label>
                             <DueDateFields defaultDueDate={task.due_date} />
                             <label className="block text-sm text-slate-700">
