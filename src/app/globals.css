@@ -17,3 +17,24 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+@keyframes ice-crack {
+  0% {
+    stroke-dashoffset: 163;
+    opacity: 0.35;
+  }
+  50% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -163;
+    opacity: 0.35;
+  }
+}
+
+@keyframes ice-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
