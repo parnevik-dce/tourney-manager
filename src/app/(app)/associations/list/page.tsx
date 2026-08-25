@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
+import { getCurrentTournament } from "@/lib/tournament";
 import {
   createAssociation,
   updateAssociation,
@@ -35,10 +36,12 @@ export default async function AssociationsListPage({
   const supabase = await createClient();
   const profile = await getCurrentProfile();
   const isDirector = profile?.role === "director";
+  const tournament = await getCurrentTournament();
 
   const { data: associations } = await supabase
     .from("associations")
     .select("*, association_contacts(*), teams(id)")
+    .eq("teams.tournament_id", tournament?.id ?? "")
     .order("name");
 
   const gmailConnected = await isGmailConnected();
