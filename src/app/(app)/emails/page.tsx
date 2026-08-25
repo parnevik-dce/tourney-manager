@@ -1,5 +1,6 @@
 import { getEmailSends } from "@/lib/email-history";
 import { getCurrentProfile } from "@/lib/profile";
+import { getCurrentTournament } from "@/lib/tournament";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 
 export default async function EmailHistoryPage() {
@@ -15,7 +16,8 @@ export default async function EmailHistoryPage() {
     );
   }
 
-  const sends = await getEmailSends();
+  const tournament = await getCurrentTournament();
+  const sends = tournament ? await getEmailSends(tournament.id) : [];
 
   return (
     <div className="flex-1 px-8 py-8">
@@ -23,7 +25,9 @@ export default async function EmailHistoryPage() {
         Email History
       </h1>
       <p className="mt-1 text-sm text-slate-500">
-        Every bulk and individual email sent from the app.
+        {tournament
+          ? `Every bulk and individual email sent for ${tournament.name}.`
+          : "No active tournament — activate one in Tournaments to see its email history."}
       </p>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">

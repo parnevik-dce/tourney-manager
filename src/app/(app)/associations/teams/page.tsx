@@ -472,7 +472,11 @@ export default async function TeamsListPage({
                             </form>
                           </div>
 
-                          <EntityEmailHistory kind="team" entityId={team.id} />
+                          <EntityEmailHistory
+                            kind="team"
+                            entityId={team.id}
+                            tournamentId={tournament?.id ?? null}
+                          />
                         </div>
                       )}
                     </CollapsibleDetails>

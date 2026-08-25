@@ -1,6 +1,7 @@
 "use server";
 
 import { getCurrentProfile } from "@/lib/profile";
+import { getCurrentTournament } from "@/lib/tournament";
 import { sendBulkBccEmail } from "@/lib/mail";
 import { recordEmailSend, type RecipientTag } from "@/lib/email-history";
 
@@ -26,11 +27,14 @@ export async function sendBulkEmail(formData: FormData) {
   if (!body) throw new Error("Message body is required.");
   if (!bcc.length) throw new Error("No recipients selected.");
 
+  const tournament = await getCurrentTournament();
+
   await sendBulkBccEmail({ bcc, subject, text: body });
   await recordEmailSend({
     subject,
     body,
     sentBy: profile?.id ?? null,
+    tournamentId: tournament?.id ?? null,
     recipients: recipientTags,
   });
 }

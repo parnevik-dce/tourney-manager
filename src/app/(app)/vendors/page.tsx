@@ -335,6 +335,7 @@ export default async function VendorsPage({
                           <EntityEmailHistory
                             kind="vendor"
                             entityId={vendor.id}
+                            tournamentId={tournament?.id ?? null}
                           />
                         </div>
                       </div>

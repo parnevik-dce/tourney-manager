@@ -370,7 +370,11 @@ export default async function ContactsPage({
                       </form>
 
                       <div className="mt-4 max-w-md">
-                        <EntityEmailHistory kind="contact" entityId={c.id} />
+                        <EntityEmailHistory
+                          kind="contact"
+                          entityId={c.id}
+                          tournamentId={tournament?.id ?? null}
+                        />
                       </div>
                     </div>
                   )}
