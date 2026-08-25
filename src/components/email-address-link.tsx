@@ -4,9 +4,15 @@ import { useRef, useState } from "react";
 
 export function EmailAddressLink({
   email,
+  entityKind,
+  entityId,
+  entityName,
   action,
 }: {
   email: string;
+  entityKind: string;
+  entityId: string;
+  entityName: string;
   action: (formData: FormData) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -63,7 +69,13 @@ export function EmailAddressLink({
               }}
               className="mt-4 space-y-3"
             >
-              <input type="hidden" name="recipients" value={email} />
+              <input
+                type="hidden"
+                name="recipient_tags"
+                value={JSON.stringify([
+                  { kind: entityKind, entityId, entityName, email },
+                ])}
+              />
               <label className="block text-sm text-slate-700">
                 Subject
                 <input

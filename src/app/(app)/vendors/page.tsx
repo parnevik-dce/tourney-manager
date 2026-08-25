@@ -16,6 +16,7 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 import { VendorsFilterBar } from "@/components/vendors-filter-bar";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
 import { EmailAddressLink } from "@/components/email-address-link";
+import { EntityEmailHistory } from "@/components/entity-email-history";
 import { sendBulkEmail } from "@/lib/communications-actions";
 import { isGmailConnected } from "@/lib/mail";
 
@@ -118,6 +119,7 @@ export default async function VendorsPage({
           {gmailConnected ? (
             <BulkEmailComposer
               triggerLabel="Email All Vendors"
+              kind="vendor"
               groups={vendors.map((v) => ({
                 id: v.id,
                 label: v.name,
@@ -187,6 +189,9 @@ export default async function VendorsPage({
                                 {isDirector && gmailConnected ? (
                                   <EmailAddressLink
                                     email={contact.email}
+                                    entityKind="vendor"
+                                    entityId={vendor.id}
+                                    entityName={vendor.name}
                                     action={sendBulkEmail}
                                   />
                                 ) : (
@@ -317,6 +322,14 @@ export default async function VendorsPage({
                                 </p>
                               )}
                             </div>
+
+                            <div className="mt-4">
+                              <EntityEmailHistory
+                                kind="vendor"
+                                entityId={vendor.id}
+                              />
+                            </div>
+
                             <form
                               action={deleteVendor.bind(null, vendor.id)}
                               className="mt-3"

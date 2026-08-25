@@ -16,6 +16,7 @@ import { ContactsFilterBar } from "@/components/contacts-filter-bar";
 import { teamDisplayName } from "@/lib/team-name";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
 import { EmailAddressLink } from "@/components/email-address-link";
+import { EntityEmailHistory } from "@/components/entity-email-history";
 import { sendBulkEmail } from "@/lib/communications-actions";
 import { isGmailConnected } from "@/lib/mail";
 
@@ -139,10 +140,11 @@ export default async function ContactsPage({
           {gmailConnected ? (
             <BulkEmailComposer
               triggerLabel="Email All Contacts"
+              kind="contact"
               groups={filtered
                 .filter((c) => c.email)
                 .map((c) => ({
-                  id: `${c.kind}-${c.id}`,
+                  id: c.id,
                   label: `${c.name} (${c.belongsTo})`,
                   emails: [c.email as string],
                 }))}
@@ -278,6 +280,9 @@ export default async function ContactsPage({
                           isDirector && gmailConnected ? (
                             <EmailAddressLink
                               email={c.email}
+                              entityKind="contact"
+                              entityId={c.id}
+                              entityName={c.name}
                               action={sendBulkEmail}
                             />
                           ) : (
@@ -363,6 +368,10 @@ export default async function ContactsPage({
                           Save
                         </button>
                       </form>
+
+                      <div className="mt-4 max-w-md">
+                        <EntityEmailHistory kind="contact" entityId={c.id} />
+                      </div>
                     </div>
                   )}
                 </CollapsibleDetails>

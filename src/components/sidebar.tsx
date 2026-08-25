@@ -14,7 +14,10 @@ const NAV_ITEMS = [
   { href: "/fields", label: "Fields & Divisions" },
 ];
 
-const DIRECTOR_NAV_ITEMS = [{ href: "/settings", label: "Settings" }];
+const DIRECTOR_NAV_ITEMS = [
+  { href: "/emails", label: "Email History" },
+  { href: "/settings", label: "Settings" },
+];
 
 type Tournament = {
   id: string;
