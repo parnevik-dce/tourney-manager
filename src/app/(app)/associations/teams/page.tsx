@@ -114,7 +114,7 @@ export default async function TeamsListPage({
           {gmailConnected ? (
             <BulkEmailComposer
               triggerLabel="Email All Teams"
-              groups={allTeams.map((t) => ({
+              groups={teams.map((t) => ({
                 id: t.id,
                 label: teamAssociationLabel(
                   t.name,

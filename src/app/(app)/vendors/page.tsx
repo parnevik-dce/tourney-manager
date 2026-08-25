@@ -117,7 +117,7 @@ export default async function VendorsPage({
           {gmailConnected ? (
             <BulkEmailComposer
               triggerLabel="Email All Vendors"
-              groups={(allVendors ?? []).map((v) => ({
+              groups={vendors.map((v) => ({
                 id: v.id,
                 label: v.name,
                 emails: (v.vendor_contacts ?? [])
