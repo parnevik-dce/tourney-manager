@@ -2,6 +2,7 @@
 
 import { getCurrentProfile } from "@/lib/profile";
 import { sendBulkBccEmail } from "@/lib/mail";
+import { recordEmailSend, type RecipientTag } from "@/lib/email-history";
 
 export async function sendBulkEmail(formData: FormData) {
   const profile = await getCurrentProfile();
@@ -9,14 +10,16 @@ export async function sendBulkEmail(formData: FormData) {
 
   const subject = String(formData.get("subject") || "").trim();
   const body = String(formData.get("body") || "").trim();
-  const recipientsRaw = String(formData.get("recipients") || "");
+
+  let recipientTags: RecipientTag[] = [];
+  try {
+    recipientTags = JSON.parse(String(formData.get("recipient_tags") || "[]"));
+  } catch {
+    recipientTags = [];
+  }
+
   const bcc = [
-    ...new Set(
-      recipientsRaw
-        .split(",")
-        .map((e) => e.trim())
-        .filter(Boolean),
-    ),
+    ...new Set(recipientTags.map((r) => r.email).filter(Boolean)),
   ];
 
   if (!subject) throw new Error("Subject is required.");
@@ -24,4 +27,10 @@ export async function sendBulkEmail(formData: FormData) {
   if (!bcc.length) throw new Error("No recipients selected.");
 
   await sendBulkBccEmail({ bcc, subject, text: body });
+  await recordEmailSend({
+    subject,
+    body,
+    sentBy: profile?.id ?? null,
+    recipients: recipientTags,
+  });
 }

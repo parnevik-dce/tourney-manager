@@ -14,6 +14,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
 import { EmailAddressLink } from "@/components/email-address-link";
+import { EntityEmailHistory } from "@/components/entity-email-history";
 import { sendBulkEmail } from "@/lib/communications-actions";
 import { isGmailConnected } from "@/lib/mail";
 
@@ -64,6 +65,7 @@ export default async function AssociationsListPage({
           {gmailConnected ? (
             <BulkEmailComposer
               triggerLabel="Email All Associations"
+              kind="association"
               groups={(associations ?? []).map((a) => ({
                 id: a.id,
                 label: a.name,
@@ -188,6 +190,9 @@ export default async function AssociationsListPage({
                                   {isDirector && gmailConnected ? (
                                     <EmailAddressLink
                                       email={primaryContact.email}
+                                      entityKind="association"
+                                      entityId={assoc.id}
+                                      entityName={assoc.name}
                                       action={sendBulkEmail}
                                     />
                                   ) : (
@@ -354,6 +359,11 @@ export default async function AssociationsListPage({
                             </button>
                           </form>
                         </div>
+
+                        <EntityEmailHistory
+                          kind="association"
+                          entityId={assoc.id}
+                        />
                       </div>
                     )}
                   </CollapsibleDetails>

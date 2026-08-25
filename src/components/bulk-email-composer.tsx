@@ -10,10 +10,12 @@ type Group = {
 
 export function BulkEmailComposer({
   triggerLabel,
+  kind,
   groups,
   action,
 }: {
   triggerLabel: string;
+  kind: string;
   groups: Group[];
   action: (formData: FormData) => void;
 }) {
@@ -24,15 +26,22 @@ export function BulkEmailComposer({
   const [confirming, setConfirming] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const recipientEmails = useMemo(() => {
-    const set = new Set<string>();
+  const recipientTags = useMemo(() => {
+    const tags: { kind: string; entityId: string; entityName: string; email: string }[] = [];
     for (const g of groups) {
       if (selected.has(g.id)) {
-        for (const e of g.emails) set.add(e);
+        for (const e of g.emails) {
+          tags.push({ kind, entityId: g.id, entityName: g.label, email: e });
+        }
       }
     }
-    return [...set];
-  }, [groups, selected]);
+    return tags;
+  }, [groups, selected, kind]);
+
+  const recipientEmails = useMemo(
+    () => [...new Set(recipientTags.map((t) => t.email))],
+    [recipientTags],
+  );
 
   const allSelected = selected.size === groups.length && groups.length > 0;
 
@@ -144,8 +153,8 @@ export function BulkEmailComposer({
               >
                 <input
                   type="hidden"
-                  name="recipients"
-                  value={recipientEmails.join(",")}
+                  name="recipient_tags"
+                  value={JSON.stringify(recipientTags)}
                 />
                 <label className="block text-sm text-slate-700">
                   Subject

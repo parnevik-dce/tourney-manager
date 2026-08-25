@@ -15,6 +15,7 @@ import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { TeamsFilterBar } from "@/components/teams-filter-bar";
 import { teamAssociationLabel } from "@/lib/team-name";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { EntityEmailHistory } from "@/components/entity-email-history";
 import { sendBulkEmail } from "@/lib/communications-actions";
 import { isGmailConnected } from "@/lib/mail";
 
@@ -114,6 +115,7 @@ export default async function TeamsListPage({
           {gmailConnected ? (
             <BulkEmailComposer
               triggerLabel="Email All Teams"
+              kind="team"
               groups={teams.map((t) => ({
                 id: t.id,
                 label: teamAssociationLabel(
@@ -469,6 +471,8 @@ export default async function TeamsListPage({
                               </button>
                             </form>
                           </div>
+
+                          <EntityEmailHistory kind="team" entityId={team.id} />
                         </div>
                       )}
                     </CollapsibleDetails>
