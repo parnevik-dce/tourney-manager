@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/profile";
 import { getCurrentTournament } from "@/lib/tournament";
@@ -156,61 +155,62 @@ export default async function VendorsPage({
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         {vendors?.length ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-5 py-2 font-medium">Vendor</th>
-                <th className="px-5 py-2 font-medium">Type</th>
-                <th className="px-5 py-2 font-medium">Contact</th>
-                <th className="px-5 py-2 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div className="min-w-[720px] text-sm">
+            <div className="grid grid-cols-[2fr_1fr_2fr_1fr_auto] gap-3 border-b border-slate-100 px-5 py-2 text-left text-xs uppercase tracking-wide text-slate-400">
+              <span>Vendor</span>
+              <span>Type</span>
+              <span>Contact</span>
+              <span>Status</span>
+              <span />
+            </div>
+            <div className="divide-y divide-slate-50">
               {vendors.map((vendor) => {
                 const contact = vendor.vendor_contacts?.[0];
                 const status = statusByVendor.get(vendor.id) ?? "not_confirmed";
                 return (
-                  <Fragment key={vendor.id}>
-                    <tr className="border-b border-slate-50">
-                      <td className="px-5 py-3 font-medium text-slate-900">
-                        {vendor.name}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {TYPE_LABELS[vendor.type] ?? vendor.type}
-                      </td>
-                      <td className="px-5 py-3 text-slate-500">
-                        {contact ? (
-                          <>
-                            {contact.name}
-                            {contact.phone && ` · ${contact.phone}`}
-                            {contact.email && (
-                              <>
-                                {" · "}
-                                {isDirector && gmailConnected ? (
-                                  <EmailAddressLink
-                                    email={contact.email}
-                                    entityKind="vendor"
-                                    entityId={vendor.id}
-                                    entityName={vendor.name}
-                                    action={sendBulkEmail}
-                                  />
-                                ) : (
-                                  contact.email
-                                )}
-                              </>
-                            )}
-                            {contact.phone && (
-                              <>
-                                {" · "}
-                                <TextLink phone={contact.phone} />
-                              </>
-                            )}
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
+                  <CollapsibleDetails
+                    key={vendor.id}
+                    summaryClassName="grid grid-cols-[2fr_1fr_2fr_1fr_auto] items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50"
+                    summary={
+                      <>
+                        <span className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
+                          {vendor.name}
+                        </span>
+                        <span className="text-slate-500">
+                          {TYPE_LABELS[vendor.type] ?? vendor.type}
+                        </span>
+                        <span className="text-slate-500">
+                          {contact ? (
+                            <>
+                              {contact.name}
+                              {contact.phone && ` · ${contact.phone}`}
+                              {contact.email && (
+                                <>
+                                  {" · "}
+                                  {isDirector && gmailConnected ? (
+                                    <EmailAddressLink
+                                      email={contact.email}
+                                      entityKind="vendor"
+                                      entityId={vendor.id}
+                                      entityName={vendor.name}
+                                      action={sendBulkEmail}
+                                    />
+                                  ) : (
+                                    contact.email
+                                  )}
+                                </>
+                              )}
+                              {contact.phone && (
+                                <>
+                                  {" · "}
+                                  <TextLink phone={contact.phone} />
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </span>
                         {isDirector && tournament ? (
                           <StatusSelect
                             status={status}
@@ -228,128 +228,122 @@ export default async function VendorsPage({
                             {STATUS_LABELS[status]}
                           </span>
                         )}
-                      </td>
-                    </tr>
-                    {isDirector && (
-                      <tr className="border-b border-slate-50 last:border-0">
-                        <td colSpan={4} className="px-5 pb-3">
-                          <CollapsibleDetails
-                            summary="Edit Vendor"
-                            summaryClassName="cursor-pointer text-xs font-medium text-blue-600"
-                          >
-                            <div className="mt-3 grid grid-cols-2 gap-4">
-                              <form
-                                action={updateVendor.bind(null, vendor.id)}
-                                className="space-y-2"
-                              >
-                                <label className="block text-sm text-slate-700">
-                                  Vendor name
-                                  <input
-                                    name="name"
-                                    defaultValue={vendor.name}
-                                    required
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                  />
-                                </label>
-                                <label className="block text-sm text-slate-700">
-                                  Type
-                                  <select
-                                    name="type"
-                                    defaultValue={vendor.type}
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                  >
-                                    {Object.entries(TYPE_LABELS).map(
-                                      ([value, label]) => (
-                                        <option key={value} value={value}>
-                                          {label}
-                                        </option>
-                                      ),
-                                    )}
-                                  </select>
-                                </label>
-                                <div className="flex items-center gap-3">
-                                  <button
-                                    type="submit"
-                                    className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                                  >
-                                    Save vendor
-                                  </button>
-                                </div>
-                              </form>
-                              {contact ? (
-                                <form
-                                  action={updateVendorContact.bind(
-                                    null,
-                                    contact.id,
-                                  )}
-                                  className="space-y-2"
-                                >
-                                  <label className="block text-sm text-slate-700">
-                                    Contact name
-                                    <input
-                                      name="name"
-                                      defaultValue={contact.name}
-                                      required
-                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                    />
-                                  </label>
-                                  <label className="block text-sm text-slate-700">
-                                    Contact phone
-                                    <input
-                                      name="phone"
-                                      defaultValue={contact.phone ?? ""}
-                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                    />
-                                  </label>
-                                  <label className="block text-sm text-slate-700">
-                                    Contact email
-                                    <input
-                                      name="email"
-                                      defaultValue={contact.email ?? ""}
-                                      className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                                    />
-                                  </label>
-                                  <button
-                                    type="submit"
-                                    className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-                                  >
-                                    Save contact
-                                  </button>
-                                </form>
-                              ) : (
-                                <p className="text-sm text-slate-500">
-                                  No contact yet.
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="mt-4">
-                              <EntityEmailHistory
-                                kind="vendor"
-                                entityId={vendor.id}
-                              />
-                            </div>
-
-                            <form
-                              action={deleteVendor.bind(null, vendor.id)}
-                              className="mt-3"
+                        {isDirector ? (
+                          <form action={deleteVendor.bind(null, vendor.id)}>
+                            <ConfirmSubmitButton
+                              confirmText={`Delete ${vendor.name}? This can't be undone.`}
+                              className="text-xs text-red-600 hover:underline"
                             >
-                              <ConfirmSubmitButton
-                                confirmText={`Delete ${vendor.name}? This can't be undone.`}
-                                className="text-sm text-red-600 hover:underline"
+                              Delete
+                            </ConfirmSubmitButton>
+                          </form>
+                        ) : (
+                          <span />
+                        )}
+                      </>
+                    }
+                  >
+                    {isDirector && (
+                      <div className="border-t border-slate-100 px-5 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <form
+                            action={updateVendor.bind(null, vendor.id)}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm text-slate-700">
+                              Vendor name
+                              <input
+                                name="name"
+                                defaultValue={vendor.name}
+                                required
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                              />
+                            </label>
+                            <label className="block text-sm text-slate-700">
+                              Type
+                              <select
+                                name="type"
+                                defaultValue={vendor.type}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                               >
-                                Delete Vendor
-                              </ConfirmSubmitButton>
+                                {Object.entries(TYPE_LABELS).map(
+                                  ([value, label]) => (
+                                    <option key={value} value={value}>
+                                      {label}
+                                    </option>
+                                  ),
+                                )}
+                              </select>
+                            </label>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="submit"
+                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                              >
+                                Save vendor
+                              </button>
+                            </div>
+                          </form>
+                          {contact ? (
+                            <form
+                              action={updateVendorContact.bind(
+                                null,
+                                contact.id,
+                              )}
+                              className="space-y-2"
+                            >
+                              <label className="block text-sm text-slate-700">
+                                Contact name
+                                <input
+                                  name="name"
+                                  defaultValue={contact.name}
+                                  required
+                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                />
+                              </label>
+                              <label className="block text-sm text-slate-700">
+                                Contact phone
+                                <input
+                                  name="phone"
+                                  defaultValue={contact.phone ?? ""}
+                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                />
+                              </label>
+                              <label className="block text-sm text-slate-700">
+                                Contact email
+                                <input
+                                  name="email"
+                                  defaultValue={contact.email ?? ""}
+                                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                                />
+                              </label>
+                              <button
+                                type="submit"
+                                className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+                              >
+                                Save contact
+                              </button>
                             </form>
-                          </CollapsibleDetails>
-                        </td>
-                      </tr>
+                          ) : (
+                            <p className="text-sm text-slate-500">
+                              No contact yet.
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="mt-4">
+                          <EntityEmailHistory
+                            kind="vendor"
+                            entityId={vendor.id}
+                          />
+                        </div>
+                      </div>
                     )}
-                  </Fragment>
+                  </CollapsibleDetails>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          </div>
         ) : (
           <p className="px-5 py-6 text-center text-sm text-slate-500">
             {typeFilter || statusFilter
