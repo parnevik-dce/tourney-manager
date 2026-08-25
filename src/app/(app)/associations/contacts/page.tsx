@@ -15,6 +15,7 @@ import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { ContactsFilterBar } from "@/components/contacts-filter-bar";
 import { teamDisplayName } from "@/lib/team-name";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { EmailAddressLink } from "@/components/email-address-link";
 import { sendBulkEmail } from "@/lib/communications-actions";
 import { isGmailConnected } from "@/lib/mail";
 
@@ -273,7 +274,18 @@ export default async function ContactsPage({
                         {c.phone ? <TextLink phone={c.phone} /> : "—"}
                       </span>
                       <span className="text-slate-500">
-                        {c.email ?? "—"}
+                        {c.email ? (
+                          isDirector && gmailConnected ? (
+                            <EmailAddressLink
+                              email={c.email}
+                              action={sendBulkEmail}
+                            />
+                          ) : (
+                            c.email
+                          )
+                        ) : (
+                          "—"
+                        )}
                       </span>
                       <span className="text-slate-500">{c.belongsTo}</span>
                       <span className="text-slate-500 capitalize">

@@ -15,6 +15,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { CollapsibleDetails } from "@/components/collapsible-details";
 import { VendorsFilterBar } from "@/components/vendors-filter-bar";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { EmailAddressLink } from "@/components/email-address-link";
 import { sendBulkEmail } from "@/lib/communications-actions";
 import { isGmailConnected } from "@/lib/mail";
 
@@ -180,7 +181,19 @@ export default async function VendorsPage({
                           <>
                             {contact.name}
                             {contact.phone && ` · ${contact.phone}`}
-                            {contact.email && ` · ${contact.email}`}
+                            {contact.email && (
+                              <>
+                                {" · "}
+                                {isDirector && gmailConnected ? (
+                                  <EmailAddressLink
+                                    email={contact.email}
+                                    action={sendBulkEmail}
+                                  />
+                                ) : (
+                                  contact.email
+                                )}
+                              </>
+                            )}
                             {contact.phone && (
                               <>
                                 {" · "}

@@ -13,6 +13,7 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { AssociationsSubNav } from "@/components/associations-sub-nav";
 import { BulkEmailComposer } from "@/components/bulk-email-composer";
+import { EmailAddressLink } from "@/components/email-address-link";
 import { sendBulkEmail } from "@/lib/communications-actions";
 import { isGmailConnected } from "@/lib/mail";
 
@@ -181,8 +182,19 @@ export default async function AssociationsListPage({
                           {primaryContact ? (
                             <>
                               {primaryContact.name}
-                              {primaryContact.email &&
-                                ` · ${primaryContact.email}`}
+                              {primaryContact.email && (
+                                <>
+                                  {" · "}
+                                  {isDirector && gmailConnected ? (
+                                    <EmailAddressLink
+                                      email={primaryContact.email}
+                                      action={sendBulkEmail}
+                                    />
+                                  ) : (
+                                    primaryContact.email
+                                  )}
+                                </>
+                              )}
                             </>
                           ) : (
                             "—"
