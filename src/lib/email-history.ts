@@ -11,18 +11,20 @@ export async function recordEmailSend({
   subject,
   body,
   sentBy,
+  tournamentId,
   recipients,
 }: {
   subject: string;
   body: string;
   sentBy: string | null;
+  tournamentId: string | null;
   recipients: RecipientTag[];
 }) {
   const admin = createAdminClient();
 
   const { data: send, error } = await admin
     .from("email_sends")
-    .insert({ subject, body, sent_by: sentBy })
+    .insert({ subject, body, sent_by: sentBy, tournament_id: tournamentId })
     .select("id")
     .single();
 
@@ -42,11 +44,12 @@ export async function recordEmailSend({
   if (recipientsError) throw new Error(recipientsError.message);
 }
 
-export async function getEmailSends() {
+export async function getEmailSends(tournamentId: string | null) {
   const admin = createAdminClient();
   const { data } = await admin
     .from("email_sends")
     .select("*, email_recipients(*), profiles(full_name, email)")
+    .eq("tournament_id", tournamentId ?? "")
     .order("sent_at", { ascending: false });
 
   return data ?? [];
@@ -59,21 +62,26 @@ export type EntityEmailHistoryRow = {
     subject: string;
     body: string;
     sent_at: string;
+    tournament_id: string | null;
   } | null;
 };
 
-export async function getEntityEmailHistory(kind: string, entityId: string) {
+export async function getEntityEmailHistory(
+  kind: string,
+  entityId: string,
+  tournamentId: string | null,
+) {
   const admin = createAdminClient();
   const { data } = await admin
     .from("email_recipients")
-    .select("email, email_sends(id, subject, body, sent_at)")
+    .select("email, email_sends(id, subject, body, sent_at, tournament_id)")
     .eq("entity_kind", kind)
     .eq("entity_id", entityId);
 
   const rows = (data ?? []) as unknown as EntityEmailHistoryRow[];
 
   return rows
-    .filter((r) => r.email_sends)
+    .filter((r) => r.email_sends && r.email_sends.tournament_id === tournamentId)
     .sort(
       (a, b) =>
         new Date(b.email_sends!.sent_at).getTime() -

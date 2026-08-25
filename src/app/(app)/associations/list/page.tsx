@@ -366,6 +366,7 @@ export default async function AssociationsListPage({
                         <EntityEmailHistory
                           kind="association"
                           entityId={assoc.id}
+                          tournamentId={tournament?.id ?? null}
                         />
                       </div>
                     )}

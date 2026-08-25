@@ -4,11 +4,13 @@ import { CollapsibleDetails } from "@/components/collapsible-details";
 export async function EntityEmailHistory({
   kind,
   entityId,
+  tournamentId,
 }: {
   kind: string;
   entityId: string;
+  tournamentId: string | null;
 }) {
-  const history = await getEntityEmailHistory(kind, entityId);
+  const history = await getEntityEmailHistory(kind, entityId, tournamentId);
 
   return (
     <div className="col-span-2 space-y-2 border-t border-slate-100 pt-3">
